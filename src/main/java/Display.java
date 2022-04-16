@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
-    public static double EPS = 10e-8;
+
 
     private Thread thread;
     private final JFrame frame;
@@ -37,47 +37,10 @@ public class Display extends Canvas implements Runnable {
         mesh = new MeshReader().readMeshFromFile(meshFilename);
         System.out.println(mesh.toString());
 
-        projectionMatrix = initProjectionMatrix();
+        projectionMatrix = Matrix.makeProjection(90.0, (double) HEIGHT / WIDTH, 0.1, 1000);
         projectedTriangles = new ArrayList<>();
 
         start();
-    }
-
-    private Matrix initProjectionMatrix() {
-        Matrix pm = new Matrix(4, 4);
-        double zNear = 0.1;
-        double zFar = 1000.0;
-        double fovDegrees = 90.0;
-        double fovRad = fovDegrees / (2 * Math.PI);
-        double fovCoefficient = 1.0 / Math.tan(0.5 * fovRad);
-        double aspectRatio = (double) HEIGHT / WIDTH;
-
-        pm.fill(0.0);
-        pm.set(0, 0, aspectRatio * fovCoefficient);
-        pm.set(1, 1, fovCoefficient);
-        pm.set(2, 2, zFar / (zFar - zNear));
-        pm.set(3, 2, (-zFar * zNear) / (zFar - zNear));
-        pm.set(2, 3, 1.0);
-
-        return pm;
-    }
-
-    private Vec3D mult(Vec3D vec, Matrix matrix) {
-        Matrix vecAsMatrix = new Matrix(1, 3);
-        vecAsMatrix.set(0, 0, vec.getX());
-        vecAsMatrix.set(0, 1, vec.getY());
-        vecAsMatrix.set(0, 2, vec.getZ());
-
-        Matrix result = Matrix.mult(vecAsMatrix, matrix);
-        double z = result.get(0, 3);
-        // Divide x and y by z (further objects are smaller)
-        if (z > EPS) { // Not division by 0
-            for (int c = 0; c < 3; c++) {
-                result.set(0, c, result.get(0, c) / z);
-            }
-        }
-
-        return new Vec3D(result.get(0, 0), result.get(0, 1), result.get(0, 2));
     }
 
     public synchronized void start() {
@@ -150,59 +113,44 @@ public class Display extends Canvas implements Runnable {
     }
 
     public void update() {
-        Matrix matrixRotX = new Matrix(4, 4);
-        Matrix matrixRotZ = new Matrix(4, 4);
-        double angle = System.currentTimeMillis() / 3000.0;
+        double angle = System.currentTimeMillis() / 1000.0;
+        Matrix matrixRotX = Matrix.makeRotationX(angle);
+        Matrix matrixRotZ = Matrix.makeRotationZ(angle);
+        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0);
+        Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
+        matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
 
-        matrixRotX.fill(0.0);
-        matrixRotZ.fill(0.0);
-
-        matrixRotX.set(0, 0, 1.0);
-        matrixRotX.set(1, 1, Math.cos(angle * 0.5));
-        matrixRotX.set(1, 2, Math.sin(angle * 0.5));
-        matrixRotX.set(2, 1, -Math.sin(angle * 0.5));
-        matrixRotX.set(2, 2, Math.cos(angle * 0.5));
-        matrixRotX.set(3, 3, 1.0);
-
-        matrixRotZ.set(0, 0, Math.cos(angle));
-        matrixRotZ.set(0, 1, Math.sin(angle));
-        matrixRotZ.set(1, 0, -Math.sin(angle));
-        matrixRotZ.set(1, 1, Math.cos(angle));
-        matrixRotZ.set(2, 2, 1.0);
-        matrixRotZ.set(3, 3, 1.0);
-
-        Triangle translatedTriangle;
-        Triangle projectedTriangle;
-        Triangle triangleRotatedZX;
+        Triangle transformedTriangle;
         Vec3D[] vecs;
 
         projectedTriangles.clear();
         for (Triangle t : mesh.getTriangles()) {
-            triangleRotatedZX = t.clone();
-            vecs = triangleRotatedZX.getVecs();
+            transformedTriangle = t.clone();
+            vecs = transformedTriangle.getVecs();
+
+            // Rotate Z, rotate X, translate
             for (int i = 0; i < 3; i++) {
-                vecs[i] = mult(vecs[i], matrixRotZ);
-                vecs[i] = mult(vecs[i], matrixRotX);
+                vecs[i] = Vec3D.multVectorMatrix(vecs[i], matrixWorld);
             }
 
-            translatedTriangle = triangleRotatedZX;
-            for (Vec3D vec : translatedTriangle.getVecs()) {
-                vec.setZ(vec.getZ() + 3.0);
-            }
-
-            projectedTriangle = translatedTriangle;
-            vecs = projectedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
-                vecs[i] = mult(vecs[i], projectionMatrix);
-                // Scale x, y range from [-1, 1] to [0, 2]
-                vecs[i].setX(vecs[i].getX() + 1.0);
-                vecs[i].setY(vecs[i].getY() + 1.0);
+                // Project from 3D to 2D
+                vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
+
+                // Normalise vector (divide projected x, y, z by z)
+                vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+
+                // Offset x, y range from [-1, 1] to [0, 2] (to visible normalised space)
+                Vec3D offset = new Vec3D(1, 1, 0);
+                vecs[i] = Vec3D.add(vecs[i], offset);
 
                 // Scale x, y to screen size
+                // Offset screen space to the center of the screen
+                // i.e. (0,0) is in the center of the screen
                 vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
                 vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
             }
-            projectedTriangles.add(projectedTriangle);
+            projectedTriangles.add(transformedTriangle);
         }
     }
 
