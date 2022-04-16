@@ -13,6 +13,9 @@ public class Display extends Canvas implements Runnable {
     private final static int HEIGHT = 600;
     private static boolean running = false;
 
+    private final Mesh cube;
+    String meshFilename = "cube.txt";
+
     public Display() {
         frame = new JFrame(title);
         Dimension dimension = new Dimension(WIDTH, HEIGHT);
@@ -23,6 +26,9 @@ public class Display extends Canvas implements Runnable {
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
         frame.setVisible(true);
+
+        cube = new MeshReader().readMeshFromFile(meshFilename);
+        System.out.println(cube.toString());
 
         start();
     }
@@ -92,4 +98,5 @@ public class Display extends Canvas implements Runnable {
     public void update() {
 
     }
+
 }
