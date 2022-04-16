@@ -62,13 +62,13 @@ public class Display extends Canvas implements Runnable {
         return pm;
     }
 
-    private Vec3D multByProjectionMatrix(Vec3D vec) {
+    private Vec3D mult(Vec3D vec, Matrix matrix) {
         Matrix vecAsMatrix = new Matrix(1, 3);
         vecAsMatrix.set(0, 0, vec.getX());
         vecAsMatrix.set(0, 1, vec.getY());
         vecAsMatrix.set(0, 2, vec.getZ());
 
-        Matrix result = Matrix.mult(vecAsMatrix, projectionMatrix);
+        Matrix result = Matrix.mult(vecAsMatrix, matrix);
         double z = result.get(0, 3);
         // Divide x and y by z (further objects are smaller)
         if (z > EPS) { // Not division by 0
@@ -150,20 +150,50 @@ public class Display extends Canvas implements Runnable {
     }
 
     public void update() {
+        Matrix matrixRotX = new Matrix(4, 4);
+        Matrix matrixRotZ = new Matrix(4, 4);
+        double angle = System.currentTimeMillis() / 3000.0;
+
+        matrixRotX.fill(0.0);
+        matrixRotZ.fill(0.0);
+
+        matrixRotX.set(0, 0, 1.0);
+        matrixRotX.set(1, 1, Math.cos(angle * 0.5));
+        matrixRotX.set(1, 2, Math.sin(angle * 0.5));
+        matrixRotX.set(2, 1, -Math.sin(angle * 0.5));
+        matrixRotX.set(2, 2, Math.cos(angle * 0.5));
+        matrixRotX.set(3, 3, 1.0);
+
+        matrixRotZ.set(0, 0, Math.cos(angle));
+        matrixRotZ.set(0, 1, Math.sin(angle));
+        matrixRotZ.set(1, 0, -Math.sin(angle));
+        matrixRotZ.set(1, 1, Math.cos(angle));
+        matrixRotZ.set(2, 2, 1.0);
+        matrixRotZ.set(3, 3, 1.0);
+
         Triangle translatedTriangle;
         Triangle projectedTriangle;
+        Triangle triangleRotatedZX;
+        Vec3D[] vecs;
 
         projectedTriangles.clear();
         for (Triangle t : mesh.getTriangles()) {
-            translatedTriangle = t.clone();
+            triangleRotatedZX = t.clone();
+            vecs = triangleRotatedZX.getVecs();
+            for (int i = 0; i < 3; i++) {
+                vecs[i] = mult(vecs[i], matrixRotZ);
+                vecs[i] = mult(vecs[i], matrixRotX);
+            }
+
+            translatedTriangle = triangleRotatedZX;
             for (Vec3D vec : translatedTriangle.getVecs()) {
                 vec.setZ(vec.getZ() + 3.0);
             }
 
-            projectedTriangle = translatedTriangle.clone();
-            Vec3D[] vecs = projectedTriangle.getVecs();
+            projectedTriangle = translatedTriangle;
+            vecs = projectedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
-                vecs[i] = multByProjectionMatrix(vecs[i]);
+                vecs[i] = mult(vecs[i], projectionMatrix);
                 // Scale x, y range from [-1, 1] to [0, 2]
                 vecs[i].setX(vecs[i].getX() + 1.0);
                 vecs[i].setY(vecs[i].getY() + 1.0);
