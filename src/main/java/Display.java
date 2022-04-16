@@ -1,9 +1,12 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
+    public static double EPS = 10e-8;
 
     private Thread thread;
     private final JFrame frame;
@@ -13,8 +16,12 @@ public class Display extends Canvas implements Runnable {
     private final static int HEIGHT = 600;
     private static boolean running = false;
 
-    private final Mesh cube;
+    private final Mesh mesh;
     String meshFilename = "cube.txt";
+
+    private Matrix projectionMatrix;
+
+    private List<Triangle> projectedTriangles;
 
     public Display() {
         frame = new JFrame(title);
@@ -27,10 +34,50 @@ public class Display extends Canvas implements Runnable {
         frame.setResizable(false);
         frame.setVisible(true);
 
-        cube = new MeshReader().readMeshFromFile(meshFilename);
-        System.out.println(cube.toString());
+        mesh = new MeshReader().readMeshFromFile(meshFilename);
+        System.out.println(mesh.toString());
+
+        projectionMatrix = initProjectionMatrix();
+        projectedTriangles = new ArrayList<>();
 
         start();
+    }
+
+    private Matrix initProjectionMatrix() {
+        Matrix pm = new Matrix(4, 4);
+        double zNear = 0.1;
+        double zFar = 1000.0;
+        double fovDegrees = 90.0;
+        double fovRad = fovDegrees / (2 * Math.PI);
+        double fovCoefficient = 1.0 / Math.tan(0.5 * fovRad);
+        double aspectRatio = (double) HEIGHT / WIDTH;
+
+        pm.fill(0.0);
+        pm.set(0, 0, aspectRatio * fovCoefficient);
+        pm.set(1, 1, fovCoefficient);
+        pm.set(2, 2, zFar / (zFar - zNear));
+        pm.set(3, 2, (-zFar * zNear) / (zFar - zNear));
+        pm.set(2, 3, 1.0);
+
+        return pm;
+    }
+
+    private Vec3D multByProjectionMatrix(Vec3D vec) {
+        Matrix vecAsMatrix = new Matrix(1, 3);
+        vecAsMatrix.set(0, 0, vec.getX());
+        vecAsMatrix.set(0, 1, vec.getY());
+        vecAsMatrix.set(0, 2, vec.getZ());
+
+        Matrix result = Matrix.mult(vecAsMatrix, projectionMatrix);
+        double z = result.get(0, 3);
+        // Divide x and y by z (further objects are smaller)
+        if (z > EPS) { // Not division by 0
+            for (int c = 0; c < 3; c++) {
+                result.set(0, c, result.get(0, c) / z);
+            }
+        }
+
+        return new Vec3D(result.get(0, 0), result.get(0, 1), result.get(0, 2));
     }
 
     public synchronized void start() {
@@ -91,12 +138,48 @@ public class Display extends Canvas implements Runnable {
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, WIDTH, HEIGHT);
 
+        graphics.setColor(Color.WHITE);
+        if (!projectedTriangles.isEmpty()) {
+            for (Triangle triangle : projectedTriangles) {
+                drawTriangle(graphics, triangle);
+            }
+        }
+
         graphics.dispose();
         bs.show();
     }
 
     public void update() {
+        Triangle translatedTriangle;
+        Triangle projectedTriangle;
 
+        projectedTriangles.clear();
+        for (Triangle t : mesh.getTriangles()) {
+            translatedTriangle = t.clone();
+            for (Vec3D vec : translatedTriangle.getVecs()) {
+                vec.setZ(vec.getZ() + 3.0);
+            }
+
+            projectedTriangle = translatedTriangle.clone();
+            Vec3D[] vecs = projectedTriangle.getVecs();
+            for (int i = 0; i < 3; i++) {
+                vecs[i] = multByProjectionMatrix(vecs[i]);
+                // Scale x, y range from [-1, 1] to [0, 2]
+                vecs[i].setX(vecs[i].getX() + 1.0);
+                vecs[i].setY(vecs[i].getY() + 1.0);
+
+                // Scale x, y to screen size
+                vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
+                vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
+            }
+            projectedTriangles.add(projectedTriangle);
+        }
     }
 
+    private void drawTriangle(Graphics g, Triangle triangle) {
+        Vec3D[] vecs = triangle.getVecs();
+        g.drawLine((int) vecs[0].getX(), (int) vecs[0].getY(), (int) vecs[1].getX(), (int) vecs[1].getY());
+        g.drawLine((int) vecs[1].getX(), (int) vecs[1].getY(), (int) vecs[2].getX(), (int) vecs[2].getY());
+        g.drawLine((int) vecs[2].getX(), (int) vecs[2].getY(), (int) vecs[0].getX(), (int) vecs[0].getY());
+    }
 }

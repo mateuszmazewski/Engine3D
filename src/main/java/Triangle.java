@@ -1,8 +1,23 @@
 public class Triangle {
     private Vec3D[] vecs;
 
+    public Triangle() {
+    }
+
     public Triangle(Vec3D[] vecs) {
         this.vecs = vecs;
+    }
+
+    public Triangle clone() {
+        Triangle clonedTriangle = new Triangle();
+        Vec3D[] clonedVecs = {new Vec3D(), new Vec3D(), new Vec3D()};
+        for (int i = 0; i < 3; i++) {
+            clonedVecs[i].setX(vecs[i].getX());
+            clonedVecs[i].setY(vecs[i].getY());
+            clonedVecs[i].setZ(vecs[i].getZ());
+        }
+        clonedTriangle.setVecs(clonedVecs);
+        return clonedTriangle;
     }
 
     public Vec3D[] getVecs() {
