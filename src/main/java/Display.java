@@ -23,6 +23,7 @@ public class Display extends Canvas implements Runnable {
 
     private Vec3D cameraPosition;
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
+    private double yaw = 0.0; // Rotation (radians) in the Y axis
 
     private double cameraStep = 0.1;
 
@@ -50,25 +51,33 @@ public class Display extends Canvas implements Runnable {
             @Override
             public void keyPressed(KeyEvent e) {
                 int keyCode = e.getKeyCode();
+                Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector
 
                 switch (keyCode) {
-                    case KeyEvent.VK_UP:
+                    case KeyEvent.VK_SPACE:
                         cameraPosition.setY(cameraPosition.getY() + cameraStep);
                         break;
-                    case KeyEvent.VK_DOWN:
+                    case KeyEvent.VK_SHIFT:
                         cameraPosition.setY(cameraPosition.getY() - cameraStep);
                         break;
-                    case KeyEvent.VK_RIGHT:
+                    case KeyEvent.VK_D:
                         cameraPosition.setX(cameraPosition.getX() + cameraStep);
                         break;
-                    case KeyEvent.VK_LEFT:
+                    case KeyEvent.VK_A:
                         cameraPosition.setX(cameraPosition.getX() - cameraStep);
                         break;
                     case KeyEvent.VK_W:
-                        cameraPosition.setZ(cameraPosition.getZ() + cameraStep);
+                        cameraPosition = Vec3D.add(cameraPosition, forwardVec);
                         break;
                     case KeyEvent.VK_S:
-                        cameraPosition.setZ(cameraPosition.getZ() - cameraStep);
+                        cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
+                        break;
+
+                    case KeyEvent.VK_LEFT:
+                        yaw -= 1;
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        yaw += 1;
                         break;
                 }
             }
@@ -144,7 +153,15 @@ public class Display extends Canvas implements Runnable {
             return;
         }
 
-        Graphics graphics = bs.getDrawGraphics();
+        Graphics2D graphics = (Graphics2D) bs.getDrawGraphics();
+
+        // By default in SWING (0,0) is in the top left corner
+        // Inverse the y axis and put (0,0) in bottom left corner
+        int m = HEIGHT / 2;
+        graphics.translate(0, m);
+        graphics.scale(1, -1);
+        graphics.translate(0, -m);
+
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, WIDTH, HEIGHT);
 
@@ -167,11 +184,18 @@ public class Display extends Canvas implements Runnable {
         Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
         matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
 
-        lookDirection = new Vec3D(0, 0, 1); // Initially look along the Z axis
         Vec3D upVec = new Vec3D(0, 1, 0);
 
+        // TODO - poprawić obroty w osi Y
         // Target point that camera should look at
-        Vec3D targetVec = Vec3D.add(cameraPosition, lookDirection);
+        Vec3D targetVec = new Vec3D(0, 0, 1);
+        Matrix cameraRotYMatrix = Matrix.makeRotationY(yaw / 100);
+
+        // Unit vector rotated in Y axis by yaw radians around (0, 0, 0)
+        lookDirection = Vec3D.multVectorMatrix(targetVec, cameraRotYMatrix);
+        System.out.println(lookDirection);
+
+        targetVec = Vec3D.add(cameraPosition, lookDirection);
 
         Matrix cameraMatrix = Matrix.makePointAtMatrix(cameraPosition, targetVec, upVec);
 
@@ -223,9 +247,8 @@ public class Display extends Canvas implements Runnable {
 
     private void drawTriangle(Graphics g, Triangle triangle) {
         Vec3D[] vecs = triangle.getVecs();
-        // By default y = 0 is in the top left corner -> HEIGHT - y flips y axis
-        g.drawLine((int) vecs[0].getX(), HEIGHT - (int) vecs[0].getY(), (int) vecs[1].getX(), HEIGHT - (int) vecs[1].getY());
-        g.drawLine((int) vecs[1].getX(), HEIGHT - (int) vecs[1].getY(), (int) vecs[2].getX(), HEIGHT - (int) vecs[2].getY());
-        g.drawLine((int) vecs[2].getX(), HEIGHT - (int) vecs[2].getY(), (int) vecs[0].getX(), HEIGHT - (int) vecs[0].getY());
+        g.drawLine((int) vecs[0].getX(), (int) vecs[0].getY(), (int) vecs[1].getX(), (int) vecs[1].getY());
+        g.drawLine((int) vecs[1].getX(), (int) vecs[1].getY(), (int) vecs[2].getX(), (int) vecs[2].getY());
+        g.drawLine((int) vecs[2].getX(), (int) vecs[2].getY(), (int) vecs[0].getX(), (int) vecs[0].getY());
     }
 }
