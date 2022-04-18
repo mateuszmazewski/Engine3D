@@ -1,7 +1,7 @@
 public class Vec3D {
-    private double x;
-    private double y;
-    private double z;
+    private double x = 0.0;
+    private double y = 0.0;
+    private double z = 0.0;
     private double w = 1.0;
 
     public Vec3D() {
