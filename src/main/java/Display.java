@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,11 @@ public class Display extends Canvas implements Runnable {
     private final Mesh mesh;
     String meshFilename = "cube.txt";
 
+    private Vec3D cameraPosition;
+    private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
+
+    private double cameraStep = 0.1;
+
     private Matrix projectionMatrix;
 
     private List<Triangle> projectedTriangles;
@@ -34,11 +41,51 @@ public class Display extends Canvas implements Runnable {
         frame.setResizable(false);
         frame.setVisible(true);
 
+        frame.addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+
+                switch (keyCode) {
+                    case KeyEvent.VK_UP:
+                        cameraPosition.setY(cameraPosition.getY() + cameraStep);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        cameraPosition.setY(cameraPosition.getY() - cameraStep);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        cameraPosition.setX(cameraPosition.getX() + cameraStep);
+                        break;
+                    case KeyEvent.VK_LEFT:
+                        cameraPosition.setX(cameraPosition.getX() - cameraStep);
+                        break;
+                    case KeyEvent.VK_W:
+                        cameraPosition.setZ(cameraPosition.getZ() + cameraStep);
+                        break;
+                    case KeyEvent.VK_S:
+                        cameraPosition.setZ(cameraPosition.getZ() - cameraStep);
+                        break;
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
+
         mesh = new MeshReader().readMeshFromFile(meshFilename);
         System.out.println(mesh.toString());
 
         projectionMatrix = Matrix.makeProjection(90.0, (double) HEIGHT / WIDTH, 0.1, 1000);
         projectedTriangles = new ArrayList<>();
+
+        cameraPosition = new Vec3D(0, 0, 0);
 
         start();
     }
@@ -82,7 +129,7 @@ public class Display extends Canvas implements Runnable {
 
             if (System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
-                frame.setTitle(title + " | " + frames + " FPS");
+                frame.setTitle(title + " | " + frames + " FPS | " + "Camera pos.: " + cameraPosition);
                 frames = 0;
             }
         }
@@ -113,16 +160,28 @@ public class Display extends Canvas implements Runnable {
     }
 
     public void update() {
-        double angle = System.currentTimeMillis() / 1000.0;
+        double angle = 0;//System.currentTimeMillis() / 1000.0;
         Matrix matrixRotX = Matrix.makeRotationX(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
         Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0);
         Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
         matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
 
-        Triangle transformedTriangle;
+        lookDirection = new Vec3D(0, 0, 1); // Initially look along the Z axis
+        Vec3D upVec = new Vec3D(0, 1, 0);
+
+        // Target point that camera should look at
+        Vec3D targetVec = Vec3D.add(cameraPosition, lookDirection);
+
+        Matrix cameraMatrix = Matrix.makePointAtMatrix(cameraPosition, targetVec, upVec);
+
+        Matrix viewMatrix = Matrix.quickInverse(cameraMatrix);
+
+        Triangle transformedTriangle, projectedTriangle;
+        Triangle viewedTriangle;
         Vec3D[] vecs;
 
+        // TODO - nie trzeba klonować trójkątów bo funkcje zwracają i tak nowe wektory
         projectedTriangles.clear();
         for (Triangle t : mesh.getTriangles()) {
             transformedTriangle = t.clone();
@@ -133,6 +192,14 @@ public class Display extends Canvas implements Runnable {
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], matrixWorld);
             }
 
+            viewedTriangle = transformedTriangle.clone();
+            vecs = viewedTriangle.getVecs();
+            for (int i = 0; i < 3; i++) {
+                vecs[i] = Vec3D.multVectorMatrix(vecs[i], viewMatrix);
+            }
+
+            projectedTriangle = viewedTriangle.clone();
+            vecs = projectedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
                 // Project from 3D to 2D
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
@@ -150,14 +217,15 @@ public class Display extends Canvas implements Runnable {
                 vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
                 vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
             }
-            projectedTriangles.add(transformedTriangle);
+            projectedTriangles.add(projectedTriangle);
         }
     }
 
     private void drawTriangle(Graphics g, Triangle triangle) {
         Vec3D[] vecs = triangle.getVecs();
-        g.drawLine((int) vecs[0].getX(), (int) vecs[0].getY(), (int) vecs[1].getX(), (int) vecs[1].getY());
-        g.drawLine((int) vecs[1].getX(), (int) vecs[1].getY(), (int) vecs[2].getX(), (int) vecs[2].getY());
-        g.drawLine((int) vecs[2].getX(), (int) vecs[2].getY(), (int) vecs[0].getX(), (int) vecs[0].getY());
+        // By default y = 0 is in the top left corner -> HEIGHT - y flips y axis
+        g.drawLine((int) vecs[0].getX(), HEIGHT - (int) vecs[0].getY(), (int) vecs[1].getX(), HEIGHT - (int) vecs[1].getY());
+        g.drawLine((int) vecs[1].getX(), HEIGHT - (int) vecs[1].getY(), (int) vecs[2].getX(), HEIGHT - (int) vecs[2].getY());
+        g.drawLine((int) vecs[2].getX(), HEIGHT - (int) vecs[2].getY(), (int) vecs[0].getX(), HEIGHT - (int) vecs[0].getY());
     }
 }

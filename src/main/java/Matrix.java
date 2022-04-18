@@ -89,6 +89,72 @@ public class Matrix {
         return C;
     }
 
+    public static Matrix makePointAtMatrix(Vec3D position, Vec3D target, Vec3D up) {
+        Vec3D newForward = Vec3D.subtract(target, position);
+        newForward = Vec3D.normalise(newForward);
+
+        Vec3D a = Vec3D.mult(newForward, Vec3D.dotProduct(up, newForward));
+        Vec3D newUp = Vec3D.subtract(up, a);
+        newUp = Vec3D.normalise(newUp);
+
+        Vec3D newRight = Vec3D.crossProduct(newUp, newForward);
+
+        // Rotation and translation matrix
+        Matrix pointAtMatrix = new Matrix();
+        pointAtMatrix.set(0, 0, newRight.getX());
+        pointAtMatrix.set(0, 1, newRight.getY());
+        pointAtMatrix.set(0, 2, newRight.getZ());
+        pointAtMatrix.set(0, 3, 0.0);
+
+        pointAtMatrix.set(1, 0, newUp.getX());
+        pointAtMatrix.set(1, 1, newUp.getY());
+        pointAtMatrix.set(1, 2, newUp.getZ());
+        pointAtMatrix.set(1, 3, 0.0);
+
+        pointAtMatrix.set(2, 0, newForward.getX());
+        pointAtMatrix.set(2, 1, newForward.getY());
+        pointAtMatrix.set(2, 2, newForward.getZ());
+        pointAtMatrix.set(2, 3, 0.0);
+
+        pointAtMatrix.set(3, 0, position.getX());
+        pointAtMatrix.set(3, 1, position.getY());
+        pointAtMatrix.set(3, 2, position.getZ());
+        pointAtMatrix.set(3, 3, 1.0);
+
+        return pointAtMatrix;
+    }
+
+    public static Matrix quickInverse(Matrix m) {
+        // Only for "PointAtMatrix"
+        Matrix inv = new Matrix();
+        double v;
+
+        inv.set(0, 0, m.get(0, 0));
+        inv.set(0, 1, m.get(1, 0));
+        inv.set(0, 2, m.get(2, 0));
+        inv.set(0, 3, 0.0);
+
+        inv.set(1, 0, m.get(0, 1));
+        inv.set(1, 1, m.get(1, 1));
+        inv.set(1, 2, m.get(2, 1));
+        inv.set(1, 3, 0.0);
+
+        inv.set(2, 0, m.get(0, 2));
+        inv.set(2, 1, m.get(1, 2));
+        inv.set(2, 2, m.get(2, 2));
+        inv.set(2, 3, 0.0);
+
+        v = -(m.get(3, 0) * m.get(0, 0) + m.get(3, 1) * m.get(1, 0) + m.get(3, 2) * m.get(2, 0));
+        inv.set(3, 0, v);
+        v = -(m.get(3, 0) * m.get(0, 1) + m.get(3, 1) * m.get(1, 1) + m.get(3, 2) * m.get(2, 1));
+        inv.set(3, 1, v);
+        v = -(m.get(3, 0) * m.get(0, 2) + m.get(3, 1) * m.get(1, 2) + m.get(3, 2) * m.get(2, 2));
+        inv.set(3, 2, v);
+        inv.set(3, 3, 1.0);
+
+        return inv;
+    }
+
     public void fill(double value) {
         for (int r = 0; r < 4; r++) {
             for (int c = 0; c < 4; c++) {

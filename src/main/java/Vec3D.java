@@ -29,7 +29,7 @@ public class Vec3D {
         );
     }
 
-    public static Vec3D mul(Vec3D vec1, double v) {
+    public static Vec3D mult(Vec3D vec1, double v) {
         return new Vec3D(
                 vec1.x * v,
                 vec1.y * v,
@@ -58,11 +58,7 @@ public class Vec3D {
 
     public static Vec3D normalise(Vec3D vec) {
         double length = length(vec);
-        return new Vec3D(
-                vec.x / length,
-                vec.y / length,
-                vec.z / length
-        );
+        return Vec3D.divide(vec, length);
     }
 
     public static Vec3D crossProduct(Vec3D vec1, Vec3D vec2) {
