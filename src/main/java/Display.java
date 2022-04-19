@@ -230,7 +230,9 @@ public class Display extends Canvas implements Runnable {
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
 
                 // Normalise
-                vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+                if (vecs[i].getW() > Util.EPS) {
+                    vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+                }
 
                 // Offset (0, 0) from bottom left corner to center of the screen
                 Vec3D offset = new Vec3D(1, 1, 0);
