@@ -229,16 +229,14 @@ public class Display extends Canvas implements Runnable {
                 // Project from 3D to 2D
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
 
-                // Scale into view
+                // Normalise
                 vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
 
-                // Offset x, y range from [-1, 1] to [0, 2] (to visible normalised space)
+                // Offset (0, 0) from bottom left corner to center of the screen
                 Vec3D offset = new Vec3D(1, 1, 0);
                 vecs[i] = Vec3D.add(vecs[i], offset);
 
                 // Scale x, y to screen size
-                // Offset screen space to the center of the screen
-                // i.e. (0,0) is in the center of the screen
                 vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
                 vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
             }
