@@ -60,7 +60,7 @@ public class Matrix {
 
     public static Matrix makeProjection(double fovDegrees, double aspectRatio, double zNear, double zFar) {
         Matrix m = new Matrix();
-        double fovRad = fovDegrees / (2 * Math.PI);
+        double fovRad = fovDegrees * (2 * Math.PI) / 360.0;
         double fovCoefficient = 1.0 / Math.tan(0.5 * fovRad);
 
         m.set(0, 0, aspectRatio * fovCoefficient);

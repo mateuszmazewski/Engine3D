@@ -91,7 +91,7 @@ public class Display extends Canvas implements Runnable {
         mesh = new MeshReader().readMeshFromFile(meshFilename);
         System.out.println(mesh.toString());
 
-        projectionMatrix = Matrix.makeProjection(90.0, (double) HEIGHT / WIDTH, 0.1, 1000);
+        projectionMatrix = Matrix.makeProjection(70.0, (double) HEIGHT / WIDTH, 0.1, 1000);
         projectedTriangles = new ArrayList<>();
 
         cameraPosition = new Vec3D(0, 0, 0);
@@ -216,6 +216,7 @@ public class Display extends Canvas implements Runnable {
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], matrixWorld);
             }
 
+            // Convert from world space to view space
             viewedTriangle = transformedTriangle.clone();
             vecs = viewedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
@@ -228,7 +229,7 @@ public class Display extends Canvas implements Runnable {
                 // Project from 3D to 2D
                 vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
 
-                // Normalise vector (divide projected x, y, z by z)
+                // Scale into view
                 vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
 
                 // Offset x, y range from [-1, 1] to [0, 2] (to visible normalised space)
