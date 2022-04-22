@@ -4,7 +4,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
@@ -27,11 +29,13 @@ public class Display extends Canvas implements Runnable {
     private double yaw; // Rotation (radians) in the Y axis
     private double cameraRotZ;
 
-    private double cameraStep = 0.1;
+    private final Map<String, Boolean> keysPressed;
+
+    private final double cameraStep = 0.1;
 
     private Matrix projectionMatrix;
 
-    private List<Triangle> projectedTriangles;
+    private final List<Triangle> projectedTriangles;
 
     public Display() {
         frame = new JFrame(title);
@@ -44,57 +48,7 @@ public class Display extends Canvas implements Runnable {
         frame.setResizable(false);
         frame.setVisible(true);
 
-        frame.addKeyListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector
-
-                switch (keyCode) {
-                    case KeyEvent.VK_SPACE:
-                        cameraPosition.setY(cameraPosition.getY() + cameraStep);
-                        break;
-                    case KeyEvent.VK_SHIFT:
-                        cameraPosition.setY(cameraPosition.getY() - cameraStep);
-                        break;
-                    case KeyEvent.VK_D:
-                        cameraPosition.setX(cameraPosition.getX() + cameraStep);
-                        break;
-                    case KeyEvent.VK_A:
-                        cameraPosition.setX(cameraPosition.getX() - cameraStep);
-                        break;
-                    case KeyEvent.VK_W:
-                        cameraPosition = Vec3D.add(cameraPosition, forwardVec);
-                        break;
-                    case KeyEvent.VK_S:
-                        cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
-                        break;
-
-                    case KeyEvent.VK_LEFT:
-                        yaw -= 1.0;
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        yaw += 1.0;
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        cameraRotX -= 1.0;
-                        break;
-                    case KeyEvent.VK_UP:
-                        cameraRotX += 1.0;
-                        break;
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
-        });
+        frame.addKeyListener(createKeyListener());
 
         mesh = new MeshReader().readMeshFromFile(meshFilename);
         System.out.println(mesh.toString());
@@ -106,6 +60,20 @@ public class Display extends Canvas implements Runnable {
         cameraRotX = 0.0;
         yaw = 0.0;
         cameraRotZ = 0.0;
+
+        keysPressed = new HashMap<>();
+        keysPressed.put("w", false);
+        keysPressed.put("s", false);
+        keysPressed.put("a", false);
+        keysPressed.put("d", false);
+        keysPressed.put("space", false);
+        keysPressed.put("shift", false);
+        keysPressed.put("up", false);
+        keysPressed.put("down", false);
+        keysPressed.put("left", false);
+        keysPressed.put("right", false);
+        keysPressed.put("q", false);
+        keysPressed.put("e", false);
 
         start();
     }
@@ -260,6 +228,46 @@ public class Display extends Canvas implements Runnable {
             }
             projectedTriangles.add(projectedTriangle);
         }
+
+        Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector
+
+        if (keysPressed.get("space")) {
+            cameraPosition.setY(cameraPosition.getY() + cameraStep);
+        }
+        if (keysPressed.get("shift")) {
+            cameraPosition.setY(cameraPosition.getY() - cameraStep);
+        }
+        if ((keysPressed.get("d"))) {
+            cameraPosition.setX(cameraPosition.getX() + cameraStep);
+        }
+        if (keysPressed.get("a")) {
+            cameraPosition.setX(cameraPosition.getX() - cameraStep);
+        }
+        if (keysPressed.get("w")) {
+            cameraPosition = Vec3D.add(cameraPosition, forwardVec);
+        }
+        if (keysPressed.get("s")) {
+            cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
+        }
+
+        if (keysPressed.get("left")) {
+            yaw -= 1.0;
+        }
+        if (keysPressed.get("right")) {
+            yaw += 1.0;
+        }
+        if (keysPressed.get("down")) {
+            cameraRotX -= 1.0;
+        }
+        if (keysPressed.get("up")) {
+            cameraRotX += 1.0;
+        }
+        if (keysPressed.get("q")) {
+            cameraRotZ -= 1.0;
+        }
+        if (keysPressed.get("e")) {
+            cameraRotZ += 1.0;
+        }
     }
 
     private void drawTriangle(Graphics g, Triangle triangle) {
@@ -267,5 +275,104 @@ public class Display extends Canvas implements Runnable {
         g.drawLine((int) vecs[0].getX(), (int) vecs[0].getY(), (int) vecs[1].getX(), (int) vecs[1].getY());
         g.drawLine((int) vecs[1].getX(), (int) vecs[1].getY(), (int) vecs[2].getX(), (int) vecs[2].getY());
         g.drawLine((int) vecs[2].getX(), (int) vecs[2].getY(), (int) vecs[0].getX(), (int) vecs[0].getY());
+    }
+
+    private KeyListener createKeyListener() {
+        return new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+
+                switch (keyCode) {
+                    case KeyEvent.VK_SPACE:
+                        keysPressed.put("space", true);
+                        break;
+                    case KeyEvent.VK_SHIFT:
+                        keysPressed.put("shift", true);
+                        break;
+                    case KeyEvent.VK_D:
+                        keysPressed.put("d", true);
+                        break;
+                    case KeyEvent.VK_A:
+                        keysPressed.put("a", true);
+                        break;
+                    case KeyEvent.VK_W:
+                        keysPressed.put("w", true);
+                        break;
+                    case KeyEvent.VK_S:
+                        keysPressed.put("s", true);
+                        break;
+
+                    case KeyEvent.VK_LEFT:
+                        keysPressed.put("left", true);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        keysPressed.put("right", true);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        keysPressed.put("down", true);
+                        break;
+                    case KeyEvent.VK_UP:
+                        keysPressed.put("up", true);
+                        break;
+                    case KeyEvent.VK_Q:
+                        keysPressed.put("q", true);
+                        break;
+                    case KeyEvent.VK_E:
+                        keysPressed.put("e", true);
+                        break;
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                int keyCode = e.getKeyCode();
+
+                switch (keyCode) {
+                    case KeyEvent.VK_SPACE:
+                        keysPressed.put("space", false);
+                        break;
+                    case KeyEvent.VK_SHIFT:
+                        keysPressed.put("shift", false);
+                        break;
+                    case KeyEvent.VK_D:
+                        keysPressed.put("d", false);
+                        break;
+                    case KeyEvent.VK_A:
+                        keysPressed.put("a", false);
+                        break;
+                    case KeyEvent.VK_W:
+                        keysPressed.put("w", false);
+                        break;
+                    case KeyEvent.VK_S:
+                        keysPressed.put("s", false);
+                        break;
+
+                    case KeyEvent.VK_LEFT:
+                        keysPressed.put("left", false);
+                        break;
+                    case KeyEvent.VK_RIGHT:
+                        keysPressed.put("right", false);
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        keysPressed.put("down", false);
+                        break;
+                    case KeyEvent.VK_UP:
+                        keysPressed.put("up", false);
+                        break;
+                    case KeyEvent.VK_Q:
+                        keysPressed.put("q", false);
+                        break;
+                    case KeyEvent.VK_E:
+                        keysPressed.put("e", false);
+                        break;
+                }
+            }
+        };
     }
 }
