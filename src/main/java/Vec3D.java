@@ -69,7 +69,7 @@ public class Vec3D {
         return crossProduct;
     }
 
-    public static Vec3D multVectorMatrix(Vec3D v, Matrix m) {
+    public static Vec3D multMatrixVector(Matrix m, Vec3D v) {
         Vec3D result = new Vec3D();
         result.x = v.x * m.get(0, 0) + v.y * m.get(1, 0) + v.z * m.get(2, 0) + v.w * m.get(3, 0);
         result.y = v.x * m.get(0, 1) + v.y * m.get(1, 1) + v.z * m.get(2, 1) + v.w * m.get(3, 1);

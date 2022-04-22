@@ -23,7 +23,7 @@ public class Display extends Canvas implements Runnable {
 
     private Vec3D cameraPosition;
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
-    private double yaw = 0.0; // Rotation (radians) in the Y axis
+    private double yaw; // Rotation (radians) in the Y axis
 
     private double cameraStep = 0.1;
 
@@ -74,10 +74,10 @@ public class Display extends Canvas implements Runnable {
                         break;
 
                     case KeyEvent.VK_LEFT:
-                        yaw -= 1;
+                        yaw -= 1.0;
                         break;
                     case KeyEvent.VK_RIGHT:
-                        yaw += 1;
+                        yaw += 1.0;
                         break;
                 }
             }
@@ -95,6 +95,7 @@ public class Display extends Canvas implements Runnable {
         projectedTriangles = new ArrayList<>();
 
         cameraPosition = new Vec3D(0, 0, 0);
+        yaw = 0.0;
 
         start();
     }
@@ -157,10 +158,12 @@ public class Display extends Canvas implements Runnable {
 
         // By default in SWING (0,0) is in the top left corner
         // Inverse the y axis and put (0,0) in bottom left corner
+        /*
         int m = HEIGHT / 2;
         graphics.translate(0, m);
         graphics.scale(1, -1);
         graphics.translate(0, -m);
+        */
 
         graphics.setColor(Color.BLACK);
         graphics.fillRect(0, 0, WIDTH, HEIGHT);
@@ -186,19 +189,16 @@ public class Display extends Canvas implements Runnable {
 
         Vec3D upVec = new Vec3D(0, 1, 0);
 
-        // TODO - poprawić obroty w osi Y
         // Target point that camera should look at
         Vec3D targetVec = new Vec3D(0, 0, 1);
-        Matrix cameraRotYMatrix = Matrix.makeRotationY(yaw / 100);
+        Matrix cameraRotYMatrix = Matrix.makeRotationY(-yaw / 100);
 
         // Unit vector rotated in Y axis by yaw radians around (0, 0, 0)
-        lookDirection = Vec3D.multVectorMatrix(targetVec, cameraRotYMatrix);
-        System.out.println(lookDirection);
+        lookDirection = Vec3D.multMatrixVector(cameraRotYMatrix, targetVec);
 
         targetVec = Vec3D.add(cameraPosition, lookDirection);
 
         Matrix cameraMatrix = Matrix.makePointAtMatrix(cameraPosition, targetVec, upVec);
-
         Matrix viewMatrix = Matrix.quickInverse(cameraMatrix);
 
         Triangle transformedTriangle, projectedTriangle;
@@ -213,26 +213,30 @@ public class Display extends Canvas implements Runnable {
 
             // Rotate Z, rotate X, translate
             for (int i = 0; i < 3; i++) {
-                vecs[i] = Vec3D.multVectorMatrix(vecs[i], matrixWorld);
+                vecs[i] = Vec3D.multMatrixVector(matrixWorld, vecs[i]);
             }
 
             // Convert from world space to view space
             viewedTriangle = transformedTriangle.clone();
             vecs = viewedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
-                vecs[i] = Vec3D.multVectorMatrix(vecs[i], viewMatrix);
+                vecs[i] = Vec3D.multMatrixVector(viewMatrix, vecs[i]);
             }
 
             projectedTriangle = viewedTriangle.clone();
             vecs = projectedTriangle.getVecs();
             for (int i = 0; i < 3; i++) {
                 // Project from 3D to 2D
-                vecs[i] = Vec3D.multVectorMatrix(vecs[i], projectionMatrix);
+                vecs[i] = Vec3D.multMatrixVector(projectionMatrix, vecs[i]);
 
                 // Normalise
                 if (vecs[i].getW() > Util.EPS) {
                     vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
                 }
+
+                // Invert X and Y (in SWING y axis is pointing down by default)
+                vecs[i].setX(-vecs[i].getX());
+                vecs[i].setY(-vecs[i].getY());
 
                 // Offset (0, 0) from bottom left corner to center of the screen
                 Vec3D offset = new Vec3D(1, 1, 0);

@@ -97,7 +97,7 @@ public class Matrix {
         Vec3D newUp = Vec3D.subtract(up, a);
         newUp = Vec3D.normalise(newUp);
 
-        Vec3D newRight = Vec3D.crossProduct(newUp, newForward);
+        Vec3D newRight = Vec3D.crossProduct(newForward, newUp);
 
         // Rotation and translation matrix
         Matrix pointAtMatrix = new Matrix();
@@ -125,7 +125,7 @@ public class Matrix {
     }
 
     public static Matrix quickInverse(Matrix m) {
-        // Only for "PointAtMatrix"
+        // Only for rotation / translation matrices
         Matrix inv = new Matrix();
         double v;
 
@@ -171,4 +171,20 @@ public class Matrix {
         data[r][c] = v;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("[\n");
+        for (int r = 0; r < 4; r++) {
+            for (int c = 0; c < 4; c++) {
+                sb.append(data[r][c]);
+                if (c < 3) {
+                    sb.append(", ");
+                } else {
+                    sb.append("\n");
+                }
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }
