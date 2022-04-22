@@ -229,7 +229,10 @@ public class Display extends Canvas implements Runnable {
             projectedTriangles.add(projectedTriangle);
         }
 
-        Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector
+        Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
+        Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
+        rightVec = Vec3D.normalise(rightVec);
+        rightVec = Vec3D.mult(rightVec, cameraStep); // Velocity vector right
 
         if (keysPressed.get("space")) {
             cameraPosition.setY(cameraPosition.getY() + cameraStep);
@@ -238,10 +241,10 @@ public class Display extends Canvas implements Runnable {
             cameraPosition.setY(cameraPosition.getY() - cameraStep);
         }
         if ((keysPressed.get("d"))) {
-            cameraPosition.setX(cameraPosition.getX() + cameraStep);
+            cameraPosition = Vec3D.add(cameraPosition, rightVec);
         }
         if (keysPressed.get("a")) {
-            cameraPosition.setX(cameraPosition.getX() - cameraStep);
+            cameraPosition = Vec3D.subtract(cameraPosition, rightVec);
         }
         if (keysPressed.get("w")) {
             cameraPosition = Vec3D.add(cameraPosition, forwardVec);
