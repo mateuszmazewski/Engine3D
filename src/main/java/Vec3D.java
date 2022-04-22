@@ -111,6 +111,6 @@ public class Vec3D {
     }
 
     public String toString() {
-        return "[" + x + ", " + y + ", " + z + "]";
+        return "[" + Util.round(x, 2) + ", " + Util.round(y, 2) + ", " + Util.round(z, 2) + "]";
     }
 }

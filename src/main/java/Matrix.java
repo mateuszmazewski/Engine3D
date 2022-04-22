@@ -94,10 +94,10 @@ public class Matrix {
         newForward = Vec3D.normalise(newForward);
 
         Vec3D a = Vec3D.mult(newForward, Vec3D.dotProduct(up, newForward));
-        Vec3D newUp = Vec3D.subtract(up, a);
+        Vec3D newUp = Vec3D.subtract(a, up);
         newUp = Vec3D.normalise(newUp);
 
-        Vec3D newRight = Vec3D.crossProduct(newForward, newUp);
+        Vec3D newRight = Vec3D.crossProduct(newUp, newForward);
 
         // Rotation and translation matrix
         Matrix pointAtMatrix = new Matrix();
