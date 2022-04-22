@@ -23,11 +23,12 @@ public class Display extends Canvas implements Runnable {
     private final Mesh mesh;
     String meshFilename = "cube.txt";
 
-    private Vec3D cameraPosition;
+    private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
-    private double cameraRotX;
-    private double yaw; // Rotation (radians) in the Y axis
-    private double cameraRotZ;
+    private double cameraRotX = 0.0;
+    private double yaw = 0.0; // Rotation (radians) in the Y axis
+    private double cameraRotZ = 0.0;
+    private double fov = 70.0;
 
     private final Map<String, Boolean> keysPressed;
 
@@ -53,13 +54,7 @@ public class Display extends Canvas implements Runnable {
         mesh = new MeshReader().readMeshFromFile(meshFilename);
         System.out.println(mesh.toString());
 
-        projectionMatrix = Matrix.makeProjection(70.0, (double) HEIGHT / WIDTH, 0.1, 1000);
         projectedTriangles = new ArrayList<>();
-
-        cameraPosition = new Vec3D(0, 0, 0);
-        cameraRotX = 0.0;
-        yaw = 0.0;
-        cameraRotZ = 0.0;
 
         keysPressed = new HashMap<>();
         keysPressed.put("w", false);
@@ -74,6 +69,8 @@ public class Display extends Canvas implements Runnable {
         keysPressed.put("right", false);
         keysPressed.put("q", false);
         keysPressed.put("e", false);
+        keysPressed.put("r", false);
+        keysPressed.put("f", false);
 
         start();
     }
@@ -117,7 +114,7 @@ public class Display extends Canvas implements Runnable {
 
             if (System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
-                frame.setTitle(title + " | " + frames + " FPS | " + "Camera pos.: " + cameraPosition + " | Look dir.: " + lookDirection);
+                frame.setTitle(title + " | " + frames + " FPS | " + "Camera pos.: " + cameraPosition + " | Look dir.: " + lookDirection + " | FOV: " + Util.round(fov, 2));
                 frames = 0;
             }
         }
@@ -180,6 +177,8 @@ public class Display extends Canvas implements Runnable {
 
         Matrix cameraMatrix = Matrix.makePointAtMatrix(cameraPosition, targetVec, upVec);
         Matrix viewMatrix = Matrix.quickInverse(cameraMatrix);
+
+        projectionMatrix = Matrix.makeProjection(fov, (double) HEIGHT / WIDTH, 0.1, 1000);
 
         Triangle transformedTriangle, projectedTriangle;
         Triangle viewedTriangle;
@@ -271,6 +270,17 @@ public class Display extends Canvas implements Runnable {
         if (keysPressed.get("e")) {
             cameraRotZ += 1.0;
         }
+        if (keysPressed.get("r")) {
+            fov += 1.0;
+        }
+        if (keysPressed.get("f")) {
+            fov -= 1.0;
+        }
+        if (fov > 360.0) {
+            fov = 0.0;
+        } else if (fov < 0.0) {
+            fov = 360.0;
+        }
     }
 
     private void drawTriangle(Graphics g, Triangle triangle) {
@@ -329,6 +339,12 @@ public class Display extends Canvas implements Runnable {
                     case KeyEvent.VK_E:
                         keysPressed.put("e", true);
                         break;
+                    case KeyEvent.VK_R:
+                        keysPressed.put("r", true);
+                        break;
+                    case KeyEvent.VK_F:
+                        keysPressed.put("f", true);
+                        break;
                 }
             }
 
@@ -373,6 +389,12 @@ public class Display extends Canvas implements Runnable {
                         break;
                     case KeyEvent.VK_E:
                         keysPressed.put("e", false);
+                        break;
+                    case KeyEvent.VK_R:
+                        keysPressed.put("r", false);
+                        break;
+                    case KeyEvent.VK_F:
+                        keysPressed.put("f", false);
                         break;
                 }
             }
