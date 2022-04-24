@@ -271,15 +271,14 @@ public class Display extends Canvas implements Runnable {
             cameraRotZ += 1.0;
         }
         if (keysPressed.get("r")) {
-            fov += 1.0;
+            if (fov < 179.0) {
+                fov += 1.0;
+            }
         }
         if (keysPressed.get("f")) {
-            fov -= 1.0;
-        }
-        if (fov > 360.0) {
-            fov = 0.0;
-        } else if (fov < 0.0) {
-            fov = 360.0;
+            if (fov > 1.0) {
+                fov -= 1.0;
+            }
         }
     }
 
