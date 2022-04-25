@@ -34,8 +34,6 @@ public class Display extends Canvas implements Runnable {
 
     private final double cameraStep = 0.1;
 
-    private Matrix projectionMatrix;
-
     private final List<Triangle> projectedTriangles;
 
     public Display() {
@@ -158,7 +156,9 @@ public class Display extends Canvas implements Runnable {
         double angle = 0;//System.currentTimeMillis() / 1000.0;
         Matrix matrixRotX = Matrix.makeRotationX(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
-        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0);
+
+        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0); // Move scene further from the camera
+
         Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
         matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
 
@@ -166,13 +166,16 @@ public class Display extends Canvas implements Runnable {
 
         // Target point that camera should look at
         Vec3D targetVec = new Vec3D(0, 0, 1);
+
+        Matrix cameraRot;
         Matrix cameraRotXMatrix = Matrix.makeRotationX(-cameraRotX / 100);
         Matrix cameraRotYMatrix = Matrix.makeRotationY(-yaw / 100);
         Matrix cameraRotZMatrix = Matrix.makeRotationZ(-cameraRotZ / 100);
 
+        cameraRot = Matrix.mult(cameraRotXMatrix, cameraRotYMatrix);
+
         // Unit vector rotated in Y axis by yaw radians around (0, 0, 0)
-        lookDirection = Vec3D.multMatrixVector(cameraRotXMatrix, targetVec);
-        lookDirection = Vec3D.multMatrixVector(cameraRotYMatrix, lookDirection);
+        lookDirection = Vec3D.multMatrixVector(cameraRot, targetVec);
         upVec = Vec3D.multMatrixVector(cameraRotZMatrix, upVec);
 
         targetVec = Vec3D.add(cameraPosition, lookDirection);
@@ -180,7 +183,7 @@ public class Display extends Canvas implements Runnable {
         Matrix cameraMatrix = Matrix.makePointAtMatrix(cameraPosition, targetVec, upVec);
         Matrix viewMatrix = Matrix.quickInverse(cameraMatrix);
 
-        projectionMatrix = Matrix.makeProjection(fov, (double) HEIGHT / WIDTH, 0.1, 1000);
+        Matrix projectionMatrix = Matrix.makeProjection(fov, (double) HEIGHT / WIDTH, 0.1, 1000);
 
         Triangle transformedTriangle, projectedTriangle;
         Triangle viewedTriangle;
@@ -192,7 +195,7 @@ public class Display extends Canvas implements Runnable {
             transformedTriangle = t.clone();
             vecs = transformedTriangle.getVecs();
 
-            // Rotate Z, rotate X, translate
+            // Rotate Z, rotate X (optional), move further from the camera
             for (int i = 0; i < 3; i++) {
                 vecs[i] = Vec3D.multMatrixVector(matrixWorld, vecs[i]);
             }
@@ -216,8 +219,8 @@ public class Display extends Canvas implements Runnable {
                 }
 
                 // Invert X and Y (in SWING y axis is pointing down by default)
-                vecs[i].setX(-vecs[i].getX());
-                //vecs[i].setY(-vecs[i].getY());
+                //vecs[i].setX(-vecs[i].getX());
+                vecs[i].setY(-vecs[i].getY());
 
                 // Offset (0, 0) from bottom left corner to center of the screen
                 Vec3D offset = new Vec3D(1, 1, 0);

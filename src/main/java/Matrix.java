@@ -3,6 +3,7 @@ public class Matrix {
 
     public Matrix() {
         data = new double[4][4];
+        fill(0.0);
     }
 
     public static Matrix makeIdentity() {
@@ -15,46 +16,42 @@ public class Matrix {
 
     public static Matrix makeRotationX(double angleRad) {
         Matrix m = new Matrix();
-        m.set(0, 0, 1.0);
-        m.set(1, 1, Math.cos(angleRad));
-        m.set(1, 2, Math.sin(angleRad));
-        m.set(2, 1, -Math.sin(angleRad));
-        m.set(2, 2, Math.cos(angleRad));
-        m.set(3, 3, 1.0);
+        m.data[0][0] = 1.0;
+        m.data[1][1] = Math.cos(angleRad);
+        m.data[1][2] = Math.sin(angleRad);
+        m.data[2][1] = -Math.sin(angleRad);
+        m.data[2][2] = Math.cos(angleRad);
+        m.data[3][3] = 1.0;
         return m;
     }
 
     public static Matrix makeRotationY(double angleRad) {
         Matrix m = new Matrix();
-        m.set(0, 0, Math.cos(angleRad));
-        m.set(0, 2, Math.sin(angleRad));
-        m.set(2, 0, -Math.sin(angleRad));
-        m.set(1, 1, 1.0);
-        m.set(2, 2, Math.cos(angleRad));
-        m.set(3, 3, 1.0);
+        m.data[0][0] = Math.cos(angleRad);
+        m.data[0][2] = Math.sin(angleRad);
+        m.data[2][0] = -Math.sin(angleRad);
+        m.data[1][1] = 1.0;
+        m.data[2][2] = Math.cos(angleRad);
+        m.data[3][3] = 1.0;
         return m;
     }
 
     public static Matrix makeRotationZ(double angleRad) {
         Matrix m = new Matrix();
-        m.set(0, 0, Math.cos(angleRad));
-        m.set(0, 1, Math.sin(angleRad));
-        m.set(1, 0, -Math.sin(angleRad));
-        m.set(1, 1, Math.cos(angleRad));
-        m.set(2, 2, 1.0);
-        m.set(3, 3, 1.0);
+        m.data[0][0] = Math.cos(angleRad);
+        m.data[0][1] = Math.sin(angleRad);
+        m.data[1][0] = -Math.sin(angleRad);
+        m.data[1][1] = Math.cos(angleRad);
+        m.data[2][2] = 1.0;
+        m.data[3][3] = 1.0;
         return m;
     }
 
     public static Matrix makeTranslation(double x, double y, double z) {
-        Matrix m = new Matrix();
-        m.set(0, 0, 1.0);
-        m.set(1, 1, 1.0);
-        m.set(2, 2, 1.0);
-        m.set(3, 3, 1.0);
-        m.set(3, 0, x);
-        m.set(3, 1, y);
-        m.set(3, 2, z);
+        Matrix m = makeIdentity();
+        m.data[3][0] = x;
+        m.data[3][1] = y;
+        m.data[3][2] = z;
         return m;
     }
 
@@ -63,12 +60,12 @@ public class Matrix {
         double fovRad = fovDegrees * (2 * Math.PI) / 360.0;
         double fovCoefficient = 1.0 / Math.tan(0.5 * fovRad);
 
-        m.set(0, 0, aspectRatio * fovCoefficient);
-        m.set(1, 1, fovCoefficient);
-        m.set(2, 2, zFar / (zFar - zNear));
-        m.set(3, 2, (-zFar * zNear) / (zFar - zNear));
-        m.set(2, 3, 1.0);
-        m.set(3, 3, 0.0);
+        m.data[0][0] = aspectRatio * fovCoefficient;
+        m.data[1][1] = fovCoefficient;
+        m.data[2][2] = zFar / (zFar - zNear);
+        m.data[3][2] = (-zFar * zNear) / (zFar - zNear);
+        m.data[2][3] = 1.0;
+        m.data[3][3] = 0.0;
         return m;
     }
 
@@ -94,63 +91,59 @@ public class Matrix {
         newForward = Vec3D.normalise(newForward);
 
         Vec3D a = Vec3D.mult(newForward, Vec3D.dotProduct(up, newForward));
-        Vec3D newUp = Vec3D.subtract(a, up);
+        Vec3D newUp = Vec3D.subtract(up, a);
         newUp = Vec3D.normalise(newUp);
 
         Vec3D newRight = Vec3D.crossProduct(newUp, newForward);
 
         // Rotation and translation matrix
-        Matrix pointAtMatrix = new Matrix();
-        pointAtMatrix.set(0, 0, newRight.getX());
-        pointAtMatrix.set(0, 1, newRight.getY());
-        pointAtMatrix.set(0, 2, newRight.getZ());
-        pointAtMatrix.set(0, 3, 0.0);
+        Matrix m = new Matrix();
+        m.data[0][0] = newRight.getX();
+        m.data[0][1] = newRight.getY();
+        m.data[0][2] = newRight.getZ();
+        m.data[0][3] = 0.0;
 
-        pointAtMatrix.set(1, 0, newUp.getX());
-        pointAtMatrix.set(1, 1, newUp.getY());
-        pointAtMatrix.set(1, 2, newUp.getZ());
-        pointAtMatrix.set(1, 3, 0.0);
+        m.data[1][0] = newUp.getX();
+        m.data[1][1] = newUp.getY();
+        m.data[1][2] = newUp.getZ();
+        m.data[1][3] = 0.0;
 
-        pointAtMatrix.set(2, 0, newForward.getX());
-        pointAtMatrix.set(2, 1, newForward.getY());
-        pointAtMatrix.set(2, 2, newForward.getZ());
-        pointAtMatrix.set(2, 3, 0.0);
+        m.data[2][0] = newForward.getX();
+        m.data[2][1] = newForward.getY();
+        m.data[2][2] = newForward.getZ();
+        m.data[2][3] = 0.0;
 
-        pointAtMatrix.set(3, 0, position.getX());
-        pointAtMatrix.set(3, 1, position.getY());
-        pointAtMatrix.set(3, 2, position.getZ());
-        pointAtMatrix.set(3, 3, 1.0);
+        m.data[3][0] = position.getX();
+        m.data[3][1] = position.getY();
+        m.data[3][2] = position.getZ();
+        m.data[3][3] = 1.0;
 
-        return pointAtMatrix;
+        return m;
     }
 
     public static Matrix quickInverse(Matrix m) {
         // Only for rotation / translation matrices
         Matrix inv = new Matrix();
-        double v;
 
-        inv.set(0, 0, m.get(0, 0));
-        inv.set(0, 1, m.get(1, 0));
-        inv.set(0, 2, m.get(2, 0));
-        inv.set(0, 3, 0.0);
+        inv.data[0][0] = m.data[0][0];
+        inv.data[0][1] = m.data[1][0];
+        inv.data[0][2] = m.data[2][0];
+        inv.data[0][3] = 0.0;
 
-        inv.set(1, 0, m.get(0, 1));
-        inv.set(1, 1, m.get(1, 1));
-        inv.set(1, 2, m.get(2, 1));
-        inv.set(1, 3, 0.0);
+        inv.data[1][0] = m.data[0][1];
+        inv.data[1][1] = m.data[1][1];
+        inv.data[1][2] = m.data[2][1];
+        inv.data[1][3] = 0.0;
 
-        inv.set(2, 0, m.get(0, 2));
-        inv.set(2, 1, m.get(1, 2));
-        inv.set(2, 2, m.get(2, 2));
-        inv.set(2, 3, 0.0);
+        inv.data[2][0] = m.data[0][2];
+        inv.data[2][1] = m.data[1][2];
+        inv.data[2][2] = m.data[2][2];
+        inv.data[2][3] = 0.0;
 
-        v = -(m.get(3, 0) * m.get(0, 0) + m.get(3, 1) * m.get(1, 0) + m.get(3, 2) * m.get(2, 0));
-        inv.set(3, 0, v);
-        v = -(m.get(3, 0) * m.get(0, 1) + m.get(3, 1) * m.get(1, 1) + m.get(3, 2) * m.get(2, 1));
-        inv.set(3, 1, v);
-        v = -(m.get(3, 0) * m.get(0, 2) + m.get(3, 1) * m.get(1, 2) + m.get(3, 2) * m.get(2, 2));
-        inv.set(3, 2, v);
-        inv.set(3, 3, 1.0);
+        inv.data[3][0] = -(m.data[3][0] * inv.data[0][0] + m.data[3][1] * inv.data[1][0] + m.data[3][2] * inv.data[2][0]);
+        inv.data[3][1] = -(m.data[3][0] * inv.data[0][1] + m.data[3][1] * inv.data[1][1] + m.data[3][2] * inv.data[2][1]);
+        inv.data[3][2] = -(m.data[3][0] * inv.data[0][2] + m.data[3][1] * inv.data[1][2] + m.data[3][2] * inv.data[2][2]);
+        inv.data[3][3] = 1.0;
 
         return inv;
     }
