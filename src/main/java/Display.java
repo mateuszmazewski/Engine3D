@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Display extends Canvas implements Runnable {
-    private static final int FRAMES_PER_SECOND = 120;
+    private static final int FRAMES_PER_SECOND = 60;
 
 
     private Thread thread;
@@ -20,7 +20,6 @@ public class Display extends Canvas implements Runnable {
     private final static int HEIGHT = 600;
     private static boolean running = false;
 
-    private final Mesh mesh;
     String meshFilename = "mesh.txt";
     String teapotFilename = "teapot.obj";
 
@@ -36,6 +35,7 @@ public class Display extends Canvas implements Runnable {
     private final double cameraStep = 0.1;
 
     private final List<Triangle> projectedTriangles;
+    private final List<Mesh> meshes;
 
     public Display() {
         frame = new JFrame(title);
@@ -50,10 +50,14 @@ public class Display extends Canvas implements Runnable {
 
         frame.addKeyListener(createKeyListener());
 
-        mesh = new MeshReader().readMeshFromFile(meshFilename);
-        System.out.println(mesh.toString());
-
         projectedTriangles = new ArrayList<>();
+        meshes = new ArrayList<>();
+
+        MeshReader meshReader = new MeshReader();
+        Mesh cubes = meshReader.readMeshFromFile(meshFilename);
+        //Mesh teapot = meshReader.readFromObjFile(teapotFilename);
+        meshes.add(cubes);
+        //meshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put("w", false);
@@ -190,98 +194,100 @@ public class Display extends Canvas implements Runnable {
         Vec3D[] vecs;
 
         projectedTriangles.clear();
-        for (Triangle t : mesh.getTriangles()) {
-            transformedTriangle = t.clone();
-            vecs = transformedTriangle.getVecs();
+        for (Mesh mesh : meshes) {
+            for (Triangle t : mesh.getTriangles()) {
+                transformedTriangle = t.clone();
+                vecs = transformedTriangle.getVecs();
 
-            // Rotate Z, rotate X (optional), move further from the camera
-            for (int i = 0; i < 3; i++) {
-                vecs[i] = Vec3D.multMatrixVector(matrixWorld, vecs[i]);
-            }
-
-            // Convert from world space to view space
-            viewedTriangle = transformedTriangle.clone();
-            vecs = viewedTriangle.getVecs();
-            for (int i = 0; i < 3; i++) {
-                vecs[i] = Vec3D.multMatrixVector(viewMatrix, vecs[i]);
-            }
-
-            projectedTriangle = viewedTriangle.clone();
-            vecs = projectedTriangle.getVecs();
-            for (int i = 0; i < 3; i++) {
-                // Project from 3D to 2D
-                vecs[i] = Vec3D.multMatrixVector(projectionMatrix, vecs[i]);
-
-                // Normalise
-                if (vecs[i].getW() > Util.EPS) {
-                    vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+                // Rotate Z, rotate X (optional), move further from the camera
+                for (int i = 0; i < 3; i++) {
+                    vecs[i] = Vec3D.multMatrixVector(matrixWorld, vecs[i]);
                 }
 
-                // Invert X and Y (in SWING y axis is pointing down by default)
-                //vecs[i].setX(-vecs[i].getX());
-                vecs[i].setY(-vecs[i].getY());
+                // Convert from world space to view space
+                viewedTriangle = transformedTriangle.clone();
+                vecs = viewedTriangle.getVecs();
+                for (int i = 0; i < 3; i++) {
+                    vecs[i] = Vec3D.multMatrixVector(viewMatrix, vecs[i]);
+                }
 
-                // Offset (0, 0) from bottom left corner to center of the screen
-                Vec3D offset = new Vec3D(1, 1, 0);
-                vecs[i] = Vec3D.add(vecs[i], offset);
+                projectedTriangle = viewedTriangle.clone();
+                vecs = projectedTriangle.getVecs();
+                for (int i = 0; i < 3; i++) {
+                    // Project from 3D to 2D
+                    vecs[i] = Vec3D.multMatrixVector(projectionMatrix, vecs[i]);
 
-                // Scale x, y to screen size
-                vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
-                vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
+                    // Normalise
+                    if (vecs[i].getW() > Util.EPS) {
+                        vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+                    }
+
+                    // Invert X and Y (in SWING y axis is pointing down by default)
+                    //vecs[i].setX(-vecs[i].getX());
+                    vecs[i].setY(-vecs[i].getY());
+
+                    // Offset (0, 0) from bottom left corner to center of the screen
+                    Vec3D offset = new Vec3D(1, 1, 0);
+                    vecs[i] = Vec3D.add(vecs[i], offset);
+
+                    // Scale x, y to screen size
+                    vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
+                    vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
+                }
+                projectedTriangles.add(projectedTriangle);
             }
-            projectedTriangles.add(projectedTriangle);
-        }
 
-        Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
-        Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
-        rightVec = Vec3D.normalise(rightVec);
-        rightVec = Vec3D.mult(rightVec, cameraStep); // Velocity vector right
+            Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
+            Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
+            rightVec = Vec3D.normalise(rightVec);
+            rightVec = Vec3D.mult(rightVec, cameraStep); // Velocity vector right
 
-        if (keysPressed.get("space")) {
-            cameraPosition.setY(cameraPosition.getY() + cameraStep);
-        }
-        if (keysPressed.get("shift")) {
-            cameraPosition.setY(cameraPosition.getY() - cameraStep);
-        }
-        if ((keysPressed.get("d"))) {
-            cameraPosition = Vec3D.add(cameraPosition, rightVec);
-        }
-        if (keysPressed.get("a")) {
-            cameraPosition = Vec3D.subtract(cameraPosition, rightVec);
-        }
-        if (keysPressed.get("w")) {
-            cameraPosition = Vec3D.add(cameraPosition, forwardVec);
-        }
-        if (keysPressed.get("s")) {
-            cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
-        }
-
-        if (keysPressed.get("left")) {
-            yaw -= 1.0;
-        }
-        if (keysPressed.get("right")) {
-            yaw += 1.0;
-        }
-        if (keysPressed.get("down")) {
-            cameraRotX -= 1.0;
-        }
-        if (keysPressed.get("up")) {
-            cameraRotX += 1.0;
-        }
-        if (keysPressed.get("q")) {
-            cameraRotZ -= 1.0;
-        }
-        if (keysPressed.get("e")) {
-            cameraRotZ += 1.0;
-        }
-        if (keysPressed.get("r")) {
-            if (fov < 179.0) {
-                fov += 1.0;
+            if (keysPressed.get("space")) {
+                cameraPosition.setY(cameraPosition.getY() + cameraStep);
             }
-        }
-        if (keysPressed.get("f")) {
-            if (fov > 1.0) {
-                fov -= 1.0;
+            if (keysPressed.get("shift")) {
+                cameraPosition.setY(cameraPosition.getY() - cameraStep);
+            }
+            if ((keysPressed.get("d"))) {
+                cameraPosition = Vec3D.add(cameraPosition, rightVec);
+            }
+            if (keysPressed.get("a")) {
+                cameraPosition = Vec3D.subtract(cameraPosition, rightVec);
+            }
+            if (keysPressed.get("w")) {
+                cameraPosition = Vec3D.add(cameraPosition, forwardVec);
+            }
+            if (keysPressed.get("s")) {
+                cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
+            }
+
+            if (keysPressed.get("left")) {
+                yaw -= 1.0;
+            }
+            if (keysPressed.get("right")) {
+                yaw += 1.0;
+            }
+            if (keysPressed.get("down")) {
+                cameraRotX -= 1.0;
+            }
+            if (keysPressed.get("up")) {
+                cameraRotX += 1.0;
+            }
+            if (keysPressed.get("q")) {
+                cameraRotZ -= 1.0;
+            }
+            if (keysPressed.get("e")) {
+                cameraRotZ += 1.0;
+            }
+            if (keysPressed.get("r")) {
+                if (fov < 179.0) {
+                    fov += 1.0;
+                }
+            }
+            if (keysPressed.get("f")) {
+                if (fov > 1.0) {
+                    fov -= 1.0;
+                }
             }
         }
     }
