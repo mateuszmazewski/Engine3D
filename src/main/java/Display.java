@@ -168,10 +168,12 @@ public class Display extends Canvas implements Runnable {
         Vec3D targetVec = new Vec3D(0, 0, 1);
         Matrix cameraRotXMatrix = Matrix.makeRotationX(-cameraRotX / 100);
         Matrix cameraRotYMatrix = Matrix.makeRotationY(-yaw / 100);
+        Matrix cameraRotZMatrix = Matrix.makeRotationZ(-cameraRotZ / 100);
 
         // Unit vector rotated in Y axis by yaw radians around (0, 0, 0)
         lookDirection = Vec3D.multMatrixVector(cameraRotXMatrix, targetVec);
         lookDirection = Vec3D.multMatrixVector(cameraRotYMatrix, lookDirection);
+        upVec = Vec3D.multMatrixVector(cameraRotZMatrix, upVec);
 
         targetVec = Vec3D.add(cameraPosition, lookDirection);
 
