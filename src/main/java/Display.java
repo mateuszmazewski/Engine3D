@@ -158,7 +158,7 @@ public class Display extends Canvas implements Runnable {
         Matrix matrixRotX = Matrix.makeRotationX(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
 
-        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0); // Move scene further from the camera
+        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 0.0); // Optionally move whole scene
 
         Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
         matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
