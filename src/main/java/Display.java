@@ -185,11 +185,9 @@ public class Display extends Canvas implements Runnable {
 
         Matrix projectionMatrix = Matrix.makeProjection(fov, (double) HEIGHT / WIDTH, 0.1, 1000);
 
-        Triangle transformedTriangle, projectedTriangle;
-        Triangle viewedTriangle;
+        Triangle transformedTriangle, projectedTriangle, viewedTriangle;
         Vec3D[] vecs;
 
-        // TODO - nie trzeba klonować trójkątów bo funkcje zwracają i tak nowe wektory
         projectedTriangles.clear();
         for (Triangle t : mesh.getTriangles()) {
             transformedTriangle = t.clone();
