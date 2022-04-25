@@ -199,7 +199,7 @@ public class Display extends Canvas implements Runnable {
                 transformedTriangle = t.clone();
                 vecs = transformedTriangle.getVecs();
 
-                // Rotate Z, rotate X (optional), move further from the camera
+                // Rotate Z, rotate X (optional deformation), move further from the camera
                 for (int i = 0; i < 3; i++) {
                     vecs[i] = Vec3D.multMatrixVector(worldMatrix, vecs[i]);
                 }
@@ -213,6 +213,7 @@ public class Display extends Canvas implements Runnable {
 
                 projectedTriangle = viewedTriangle.clone();
                 vecs = projectedTriangle.getVecs();
+                int nonVisibleVecs = 0;
                 for (int i = 0; i < 3; i++) {
                     // Project from 3D to 2D
                     vecs[i] = Vec3D.multMatrixVector(projectionMatrix, vecs[i]);
@@ -220,6 +221,11 @@ public class Display extends Canvas implements Runnable {
                     // Normalise
                     if (vecs[i].getW() > Util.EPS) {
                         vecs[i] = Vec3D.divide(vecs[i], vecs[i].getW());
+                    }
+
+                    // Partial clipping -- count how many verts of a triangle are invisible
+                    if (Math.abs(vecs[i].getX()) > 1.0 || Math.abs(vecs[i].getY()) > 1.0 || Math.abs(vecs[i].getZ()) > 1) {
+                        nonVisibleVecs++;
                     }
 
                     // Invert X and Y (in SWING y axis is pointing down by default)
@@ -234,8 +240,12 @@ public class Display extends Canvas implements Runnable {
                     vecs[i].setX(vecs[i].getX() * 0.5 * WIDTH);
                     vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
                 }
-                projectedTriangles.add(projectedTriangle);
+                // Partial clipping -- remove only when all 3 verts are invisible
+                if (nonVisibleVecs < 3) {
+                    projectedTriangles.add(projectedTriangle);
+                }
             }
+            //System.out.println("Aktualnie wyświetlanych trójkątów: " + projectedTriangles.size());
 
             Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
             Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
