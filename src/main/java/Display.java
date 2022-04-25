@@ -162,10 +162,10 @@ public class Display extends Canvas implements Runnable {
         Matrix matrixRotX = Matrix.makeRotationX(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
 
-        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 0.0); // Optionally move whole scene
+        Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0); // Optionally move whole scene
 
-        Matrix matrixWorld = Matrix.mult(matrixRotZ, matrixRotX);
-        matrixWorld = Matrix.mult(matrixWorld, matrixTranslation);
+        Matrix worldMatrix = Matrix.mult(matrixRotZ, matrixRotX);
+        worldMatrix = Matrix.mult(worldMatrix, matrixTranslation);
 
         Vec3D upVec = new Vec3D(0, 1, 0);
 
@@ -201,7 +201,7 @@ public class Display extends Canvas implements Runnable {
 
                 // Rotate Z, rotate X (optional), move further from the camera
                 for (int i = 0; i < 3; i++) {
-                    vecs[i] = Vec3D.multMatrixVector(matrixWorld, vecs[i]);
+                    vecs[i] = Vec3D.multMatrixVector(worldMatrix, vecs[i]);
                 }
 
                 // Convert from world space to view space
