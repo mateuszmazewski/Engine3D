@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Display extends Canvas implements Runnable {
-    private static final int FRAMES_PER_SECOND = 60;
+    private static final int FRAMES_PER_SECOND = 120;
 
 
     private Thread thread;
