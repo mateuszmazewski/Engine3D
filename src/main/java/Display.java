@@ -21,7 +21,8 @@ public class Display extends Canvas implements Runnable {
     private static boolean running = false;
 
     private final Mesh mesh;
-    String meshFilename = "cube.txt";
+    String meshFilename = "mesh.txt";
+    String teapotFilename = "teapot.obj";
 
     private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
