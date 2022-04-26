@@ -214,7 +214,7 @@ public class Display extends Canvas implements Runnable {
 
                 projectedTriangle = viewedTriangle.clone();
                 vecs = projectedTriangle.getVecs();
-                int nonVisibleVecs = 0;
+                int invisibleVecs = 0;
                 for (int i = 0; i < 3; i++) {
                     // Project from 3D to 2D
                     // Convert from world space to screen space
@@ -227,7 +227,7 @@ public class Display extends Canvas implements Runnable {
 
                     // Partial clipping -- count how many verts of a triangle are invisible
                     if (Math.abs(vecs[i].getX()) > 1.0 || Math.abs(vecs[i].getY()) > 1.0 || Math.abs(vecs[i].getZ()) > 1) {
-                        nonVisibleVecs++;
+                        invisibleVecs++;
                     }
 
                     // Invert X and Y (in SWING y axis is pointing down by default)
@@ -243,7 +243,7 @@ public class Display extends Canvas implements Runnable {
                     vecs[i].setY(vecs[i].getY() * 0.5 * HEIGHT);
                 }
                 // Partial clipping -- remove only when all 3 verts are invisible
-                if (nonVisibleVecs < 3) {
+                if (invisibleVecs < 3) {
                     projectedTriangles.add(projectedTriangle);
                 }
             }
