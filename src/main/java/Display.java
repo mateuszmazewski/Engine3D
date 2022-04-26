@@ -200,6 +200,7 @@ public class Display extends Canvas implements Runnable {
                 vecs = transformedTriangle.getVecs();
 
                 // Rotate Z, rotate X (optional deformation), move further from the camera
+                // Convert from object space to world space
                 for (int i = 0; i < 3; i++) {
                     vecs[i] = Vec3D.multMatrixVector(worldMatrix, vecs[i]);
                 }
@@ -216,6 +217,7 @@ public class Display extends Canvas implements Runnable {
                 int nonVisibleVecs = 0;
                 for (int i = 0; i < 3; i++) {
                     // Project from 3D to 2D
+                    // Convert from world space to screen space
                     vecs[i] = Vec3D.multMatrixVector(projectionMatrix, vecs[i]);
 
                     // Normalise
