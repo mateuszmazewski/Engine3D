@@ -234,7 +234,7 @@ public class Display extends Canvas implements Runnable {
                     //vecs[i].setX(-vecs[i].getX());
                     vecs[i].setY(-vecs[i].getY());
 
-                    // Offset (0, 0) from bottom left corner to center of the screen
+                    // Offset from range [-1, 1] to range [0, 2]
                     Vec3D offset = new Vec3D(1, 1, 0);
                     vecs[i] = Vec3D.add(vecs[i], offset);
 
