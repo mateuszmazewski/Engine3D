@@ -251,14 +251,16 @@ public class Display extends Canvas implements Runnable {
 
             Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
             Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
+            upVec = Vec3D.normalise(upVec);
+            upVec = Vec3D.mult(upVec, cameraStep);
             rightVec = Vec3D.normalise(rightVec);
             rightVec = Vec3D.mult(rightVec, cameraStep); // Velocity vector right
 
             if (keysPressed.get("space")) {
-                cameraPosition.setY(cameraPosition.getY() + cameraStep);
+                cameraPosition = Vec3D.add(cameraPosition, upVec);
             }
             if (keysPressed.get("shift")) {
-                cameraPosition.setY(cameraPosition.getY() - cameraStep);
+                cameraPosition = Vec3D.subtract(cameraPosition, upVec);
             }
             if ((keysPressed.get("d"))) {
                 cameraPosition = Vec3D.add(cameraPosition, rightVec);
