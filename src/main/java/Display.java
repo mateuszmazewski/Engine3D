@@ -214,6 +214,7 @@ public class Display extends Canvas implements Runnable {
 
                 Vec3D cameraRay = Vec3D.subtract(vecs[0], cameraPosition);
 
+                // How much of the normal projects onto a ray cast from camera to the triangle
                 if (Vec3D.dotProduct(normal, cameraRay) > 0.0) {
                     // Rear wall -> invisible
                     continue;
