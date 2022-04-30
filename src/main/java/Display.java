@@ -205,6 +205,20 @@ public class Display extends Canvas implements Runnable {
                     vecs[i] = Vec3D.multMatrixVector(worldMatrix, vecs[i]);
                 }
 
+                // Check if it's a rear wall
+                Vec3D normal, line1, line2;
+                line1 = Vec3D.subtract(vecs[1], vecs[0]);
+                line2 = Vec3D.subtract(vecs[2], vecs[0]);
+                normal = Vec3D.crossProduct(line1, line2);
+                normal = Vec3D.normalise(normal);
+
+                Vec3D cameraRay = Vec3D.subtract(vecs[0], cameraPosition);
+
+                if (Vec3D.dotProduct(normal, cameraRay) > 0.0) {
+                    // Rear wall -> invisible
+                    continue;
+                }
+
                 // Convert from world space to view space
                 viewedTriangle = transformedTriangle.clone();
                 vecs = viewedTriangle.getVecs();
