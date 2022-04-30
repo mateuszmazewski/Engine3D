@@ -55,9 +55,9 @@ public class Display extends Canvas implements Runnable {
 
         MeshReader meshReader = new MeshReader();
         Mesh cubes = meshReader.readMeshFromFile(meshFilename);
-        //Mesh teapot = meshReader.readFromObjFile(teapotFilename);
-        meshes.add(cubes);
-        //meshes.add(teapot);
+        Mesh teapot = meshReader.readFromObjFile(teapotFilename);
+        //meshes.add(cubes);
+        meshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put("w", false);
@@ -263,6 +263,15 @@ public class Display extends Canvas implements Runnable {
                 }
             }
             //System.out.println("Aktualnie wyświetlanych trójkątów: " + projectedTriangles.size());
+
+            // Draw triangles from back to front (painter's algorithm)
+            projectedTriangles.sort((Triangle t1, Triangle t2) -> {
+                Vec3D[] vecs1 = t1.getVecs();
+                Vec3D[] vecs2 = t2.getVecs();
+                double z1 = (vecs1[0].getZ() + vecs1[1].getZ() + vecs1[2].getZ()) / 3.0;
+                double z2 = (vecs2[0].getZ() + vecs2[1].getZ() + vecs2[2].getZ()) / 3.0;
+                return Double.compare(z1, z2);
+            });
 
             Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
             Vec3D rightVec = Vec3D.crossProduct(upVec, forwardVec);
