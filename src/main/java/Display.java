@@ -337,6 +337,21 @@ public class Display extends Canvas implements Runnable {
         g.drawLine((int) vecs[2].getX(), (int) vecs[2].getY(), (int) vecs[0].getX(), (int) vecs[0].getY());
     }
 
+    private void fillTriangle(Graphics g, Triangle triangle) {
+        Vec3D[] vecs = triangle.getVecs();
+        int[] xPoints = new int[3];
+        int[] yPoints = new int[3];
+
+        for (int i = 0; i < 3; i++) {
+            xPoints[i] = (int) vecs[i].getX();
+            yPoints[i] = (int) vecs[i].getY();
+        }
+
+        // Create and fill a polygon representing the triangle
+        Polygon p = new Polygon(xPoints, yPoints, 3);
+        g.fillPolygon(p);
+    }
+
     private KeyListener createKeyListener() {
         return new KeyListener() {
             @Override
