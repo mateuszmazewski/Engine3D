@@ -149,7 +149,7 @@ public class Display extends Canvas implements Runnable {
         graphics.setColor(Color.WHITE);
         if (!projectedTriangles.isEmpty()) {
             for (Triangle triangle : projectedTriangles) {
-                drawTriangle(graphics, triangle);
+                fillTriangle(graphics, triangle);
             }
         }
 
@@ -158,7 +158,7 @@ public class Display extends Canvas implements Runnable {
     }
 
     public void update() {
-        double angle = 0;//System.currentTimeMillis() / 1000.0;
+        double angle = 0.0;//System.currentTimeMillis() / 1000.0;
         Matrix matrixRotX = Matrix.makeRotationX(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
 
@@ -220,6 +220,14 @@ public class Display extends Canvas implements Runnable {
                     continue;
                 }
 
+                // Illumination
+                Vec3D lightDirection = new Vec3D(0, 0, -1);
+                lightDirection = Vec3D.normalise(lightDirection);
+                double dotProduct = Vec3D.dotProduct(normal, lightDirection);
+                if (dotProduct > 0.0) {
+                    transformedTriangle.setLuminance(dotProduct);
+                }
+
                 // Convert from world space to view space
                 viewedTriangle = transformedTriangle.clone();
                 vecs = viewedTriangle.getVecs();
@@ -270,7 +278,7 @@ public class Display extends Canvas implements Runnable {
                 Vec3D[] vecs2 = t2.getVecs();
                 double z1 = (vecs1[0].getZ() + vecs1[1].getZ() + vecs1[2].getZ()) / 3.0;
                 double z2 = (vecs2[0].getZ() + vecs2[1].getZ() + vecs2[2].getZ()) / 3.0;
-                return Double.compare(z1, z2);
+                return Double.compare(z2, z1);
             });
 
             Vec3D forwardVec = Vec3D.mult(lookDirection, cameraStep); // Velocity vector forward
@@ -347,8 +355,11 @@ public class Display extends Canvas implements Runnable {
             yPoints[i] = (int) vecs[i].getY();
         }
 
-        // Create and fill a polygon representing the triangle
+        // Create a polygon representing the triangle
         Polygon p = new Polygon(xPoints, yPoints, 3);
+
+        int lum = (int) (255 * triangle.getLuminance());
+        g.setColor(new Color(lum, lum, lum));
         g.fillPolygon(p);
     }
 

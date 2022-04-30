@@ -1,5 +1,6 @@
 public class Triangle {
     private Vec3D[] vecs;
+    private double luminance = 0.0;
 
     public Triangle() {
     }
@@ -17,6 +18,7 @@ public class Triangle {
             clonedVecs[i].setZ(vecs[i].getZ());
         }
         clonedTriangle.setVecs(clonedVecs);
+        clonedTriangle.luminance = luminance;
         return clonedTriangle;
     }
 
@@ -29,6 +31,14 @@ public class Triangle {
             throw new IllegalArgumentException("Triangle must have 3 vertices");
         }
         this.vecs = vecs;
+    }
+
+    public void setLuminance(double luminance) {
+        this.luminance = luminance;
+    }
+
+    public double getLuminance() {
+        return luminance;
     }
 
     @Override
