@@ -37,6 +37,8 @@ public class Display extends Canvas implements Runnable {
     private final List<Triangle> projectedTriangles;
     private final List<Mesh> meshes;
 
+    private boolean drawMesh = false;
+
     public Display() {
         frame = new JFrame(title);
         Dimension dimension = new Dimension(WIDTH, HEIGHT);
@@ -56,8 +58,8 @@ public class Display extends Canvas implements Runnable {
         MeshReader meshReader = new MeshReader();
         Mesh cubes = meshReader.readMeshFromFile(meshFilename);
         Mesh teapot = meshReader.readFromObjFile(teapotFilename);
-        //meshes.add(cubes);
-        meshes.add(teapot);
+        meshes.add(cubes);
+        //meshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put("w", false);
@@ -150,6 +152,10 @@ public class Display extends Canvas implements Runnable {
         if (!projectedTriangles.isEmpty()) {
             for (Triangle triangle : projectedTriangles) {
                 fillTriangle(graphics, triangle);
+                if (drawMesh) {
+                    graphics.setColor(Color.WHITE);
+                    drawTriangle(graphics, triangle);
+                }
             }
         }
 
@@ -417,6 +423,10 @@ public class Display extends Canvas implements Runnable {
                         break;
                     case KeyEvent.VK_F:
                         keysPressed.put("f", true);
+                        break;
+
+                    case KeyEvent.VK_M:
+                        drawMesh = !drawMesh;
                         break;
                 }
             }
