@@ -58,8 +58,8 @@ public class Display extends Canvas implements Runnable {
         MeshReader meshReader = new MeshReader();
         Mesh cubes = meshReader.readMeshFromFile(meshFilename);
         Mesh teapot = meshReader.readFromObjFile(teapotFilename);
-        meshes.add(cubes);
-        //meshes.add(teapot);
+        //meshes.add(cubes);
+        meshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put("w", false);
@@ -150,8 +150,9 @@ public class Display extends Canvas implements Runnable {
 
         graphics.setColor(Color.WHITE);
         if (!projectedTriangles.isEmpty()) {
+            scanlineDraw(graphics);
             for (Triangle triangle : projectedTriangles) {
-                fillTriangle(graphics, triangle);
+                //fillTriangle(graphics, triangle);
                 if (drawMesh) {
                     graphics.setColor(Color.WHITE);
                     drawTriangle(graphics, triangle);
@@ -161,6 +162,85 @@ public class Display extends Canvas implements Runnable {
 
         graphics.dispose();
         bs.show();
+    }
+
+    private void scanlineDraw(Graphics2D graphics) {
+        List<Edge> edges = new ArrayList<>();
+        List<Edge> activeEdges = new ArrayList<>();
+
+        for (Triangle t : projectedTriangles) {
+            Vec3D[] vecs = t.getVecs();
+            edges.add(new Edge(t, vecs[0], vecs[1]));
+            edges.add(new Edge(t, vecs[1], vecs[2]));
+            edges.add(new Edge(t, vecs[2], vecs[0]));
+        }
+
+        for (int y = 0; y < HEIGHT; y++) {
+            activeEdges.clear();
+
+            for (Edge e : edges) {
+                if (e.xIntersection(y) != null) {
+                    activeEdges.add(e);
+                }
+            }
+
+            activeEdges.sort((Edge e1, Edge e2) -> {
+                // Sort by x of crossing point
+                double a1 = (e1.p2.getY() - e1.p1.getY()) / (e1.p2.getX() - e1.p1.getX());
+                double a2 = (e2.p2.getY() - e2.p1.getY()) / (e2.p2.getX() - e2.p1.getX());
+                double b1 = e1.p1.getY() - a1 * e1.p1.getX();
+                double b2 = e2.p1.getY() - a2 * e2.p1.getX();
+                double xCross1 = (e1.p1.getY() - b1) / a1;
+                double xCross2 = (e2.p1.getY() - b2) / a2;
+                return Double.compare(xCross1, xCross2);
+            });
+
+            // Start from the beginning of each line
+            int x = 0;
+            List<Triangle> activeTriangles = new ArrayList<>();
+
+            for (Edge ae : activeEdges) {
+                int xIntersection = ae.xIntersection(y);
+
+                if (activeTriangles.size() == 0) {
+                    graphics.setColor(Color.BLACK);
+                } else if (activeTriangles.size() == 1) {
+                    int lum = (int) (255 * activeTriangles.get(0).getLuminance());
+                    graphics.setColor(new Color(lum, lum, lum));
+                } else {
+                    Triangle closestTriangle = activeTriangles.get(0);
+                    Vec3D[] ctVecs = closestTriangle.getVecs();
+                    double zClosest = (ctVecs[0].getZ() + ctVecs[1].getZ() + ctVecs[2].getZ()) / 3.0;
+                    for(Triangle t : activeTriangles) {
+                        int xMid = (x + xIntersection) / 2;
+                        // TODO: Calculate z for x = xMid
+                        Vec3D[] vecs = t.getVecs();
+                        double z = (vecs[0].getZ() + vecs[1].getZ() + vecs[2].getZ()) / 3.0;
+                        if(z < zClosest) {
+                            closestTriangle = t;
+                            zClosest = z;
+                        }
+                    }
+
+                    int lum = (int) (255 * closestTriangle.getLuminance());
+                    graphics.setColor(new Color(lum, lum, lum));
+                }
+
+                graphics.drawLine(x, y, xIntersection, y);
+                x = xIntersection; // TODO: xIntersection + 1 ?
+                if (!activeTriangles.contains(ae.getTriangle())) {
+                    // Going inside the triangle
+                    activeTriangles.add(ae.getTriangle());
+                } else {
+                    // Going outside the triangle
+                    activeTriangles.remove(ae.getTriangle());
+                }
+            }
+
+            // Draw the rest of the line
+            graphics.setColor(Color.BLACK);
+            graphics.drawLine(x, y, WIDTH, y);
+        }
     }
 
     public void update() {
