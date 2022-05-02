@@ -17,8 +17,6 @@ public class MeshReader {
 
         Vec3D vec3d;
         Vec3D[] triangleVecs = {null, null, null};
-        int i = 0;
-        double coordinate;
 
         File file = new File(filename);
         try {
@@ -37,23 +35,10 @@ public class MeshReader {
 
                 vec3d = new Vec3D();
 
-                for (String s : splittedLine) {
-                    coordinate = Double.parseDouble(s);
-                    switch (i) {
-                        case 0:
-                            vec3d.setX(coordinate);
-                            break;
-                        case 1:
-                            vec3d.setY(coordinate);
-                            break;
-                        case 2:
-                            vec3d.setZ(coordinate);
-                            break;
-                        default:
-                            throw new IOException("Too many coordinates for a triangle");
-                    }
-                    i++;
-                }
+                vec3d.setX(Double.parseDouble(splittedLine[0]));
+                vec3d.setY(Double.parseDouble(splittedLine[1]));
+                vec3d.setZ(Double.parseDouble(splittedLine[2]));
+
                 triangleVecs[vec3dCount] = vec3d;
                 vec3dCount++;
 
@@ -61,8 +46,6 @@ public class MeshReader {
                     mesh.addTriangle(new Triangle(triangleVecs.clone()));
                     vec3dCount = 0;
                 }
-
-                i = 0;
             }
 
         } catch (IOException | NumberFormatException e) {
