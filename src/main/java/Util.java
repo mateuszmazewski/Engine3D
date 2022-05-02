@@ -11,4 +11,9 @@ public class Util {
         bd = bd.setScale(places, RoundingMode.HALF_UP);
         return bd.doubleValue();
     }
+
+    public static double scaleToRange(double inRangeA, double inRangeB, double in, double outRangeA, double outRangeB) {
+        return (in - inRangeA) / (inRangeB - inRangeA) * (outRangeB - outRangeA) + outRangeA;
+    }
+
 }

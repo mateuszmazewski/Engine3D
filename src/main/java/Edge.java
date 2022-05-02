@@ -10,20 +10,15 @@ public class Edge {
     }
 
     public Integer xIntersection(int y) {
-        int min, max;
-        min = (int)Math.min(p1.getY(), p2.getY());
-        max = (int)Math.max(p1.getY(), p2.getY());
+        int minY = (int) Math.min(p1.getY(), p2.getY());
+        int maxY = (int) Math.max(p1.getY(), p2.getY());
 
-        if (y < min || y > max) {
+        if (y < minY || y > maxY) {
             // There is no intersection
             return null;
         }
 
-        double a = (p2.getY() - p1.getY()) / (p2.getX() - p1.getX());
-        double b = p1.getY() - a * p1.getX();
-        double xCross = (p1.getY() - b) / a;
-
-        return (int) xCross;
+        return (int) Util.scaleToRange(p1.getY(), p2.getY(), y, p1.getX(), p2.getX());
     }
 
     public Triangle getTriangle() {
