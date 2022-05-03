@@ -30,7 +30,7 @@ public class Display extends Canvas implements Runnable {
     private double cameraRotZ = 0.0;
     private double fov = 70.0;
 
-    private final Map<String, Boolean> keysPressed;
+    private final Map<Integer, Boolean> keysPressed;
 
     private final double cameraStep = 0.1;
 
@@ -62,20 +62,20 @@ public class Display extends Canvas implements Runnable {
         meshes.add(teapot);
 
         keysPressed = new HashMap<>();
-        keysPressed.put("w", false);
-        keysPressed.put("s", false);
-        keysPressed.put("a", false);
-        keysPressed.put("d", false);
-        keysPressed.put("space", false);
-        keysPressed.put("shift", false);
-        keysPressed.put("up", false);
-        keysPressed.put("down", false);
-        keysPressed.put("left", false);
-        keysPressed.put("right", false);
-        keysPressed.put("q", false);
-        keysPressed.put("e", false);
-        keysPressed.put("r", false);
-        keysPressed.put("f", false);
+        keysPressed.put(KeyEvent.VK_W, false);
+        keysPressed.put(KeyEvent.VK_S, false);
+        keysPressed.put(KeyEvent.VK_A, false);
+        keysPressed.put(KeyEvent.VK_D, false);
+        keysPressed.put(KeyEvent.VK_SPACE, false);
+        keysPressed.put(KeyEvent.VK_SHIFT, false);
+        keysPressed.put(KeyEvent.VK_UP, false);
+        keysPressed.put(KeyEvent.VK_DOWN, false);
+        keysPressed.put(KeyEvent.VK_LEFT, false);
+        keysPressed.put(KeyEvent.VK_RIGHT, false);
+        keysPressed.put(KeyEvent.VK_Q, false);
+        keysPressed.put(KeyEvent.VK_E, false);
+        keysPressed.put(KeyEvent.VK_R, false);
+        keysPressed.put(KeyEvent.VK_F, false);
 
         start();
     }
@@ -168,6 +168,7 @@ public class Display extends Canvas implements Runnable {
         List<Edge> edges = new ArrayList<>();
         List<Edge> activeEdges = new ArrayList<>();
 
+        // Initialize edges list with all edges with their corresponding endpoints
         for (Triangle t : projectedTriangles) {
             Vec3D[] vecs = t.getVecs();
             edges.add(new Edge(t, vecs[0], vecs[1]));
@@ -175,17 +176,19 @@ public class Display extends Canvas implements Runnable {
             edges.add(new Edge(t, vecs[2], vecs[0]));
         }
 
+        // Iterate through every scanline
         for (int y = 0; y < HEIGHT; y++) {
             activeEdges.clear();
 
+            // Initialize active edges list with all edges that are crossing by the current scanline
             for (Edge e : edges) {
                 if (e.xIntersection(y) != null) {
                     activeEdges.add(e);
                 }
             }
 
+            // Sort active edges list by increasing order of x of the intersection point
             activeEdges.sort((Edge e1, Edge e2) -> {
-                // Sort by x of crossing point
                 double a1 = (e1.p2.getY() - e1.p1.getY()) / (e1.p2.getX() - e1.p1.getX());
                 double a2 = (e2.p2.getY() - e2.p1.getY()) / (e2.p2.getX() - e2.p1.getX());
                 double b1 = e1.p1.getY() - a1 * e1.p1.getX();
@@ -195,7 +198,7 @@ public class Display extends Canvas implements Runnable {
                 return Double.compare(xCross1, xCross2);
             });
 
-            // Start from the beginning of each line
+            // Start from the beginning of each scanline
             int x = 0;
             List<Triangle> activeTriangles = new ArrayList<>();
 
@@ -203,20 +206,23 @@ public class Display extends Canvas implements Runnable {
                 int xIntersection = ae.xIntersection(y);
 
                 if (activeTriangles.size() == 0) {
+                    // No triangles -- draw background
                     graphics.setColor(Color.BLACK);
                 } else if (activeTriangles.size() == 1) {
+                    // One triangle -- no overlapping, so draw this triangle
                     int lum = (int) (255 * activeTriangles.get(0).getLuminance());
                     graphics.setColor(new Color(lum, lum, lum));
                 } else {
+                    // More than one triangle -- find out which is the closest one and draw only this one
                     Triangle closestTriangle = activeTriangles.get(0);
                     Vec3D[] ctVecs = closestTriangle.getVecs();
                     double zClosest = (ctVecs[0].getZ() + ctVecs[1].getZ() + ctVecs[2].getZ()) / 3.0;
-                    for(Triangle t : activeTriangles) {
+                    for (Triangle t : activeTriangles) {
                         int xMid = (x + xIntersection) / 2;
                         // TODO: Calculate z for x = xMid
                         Vec3D[] vecs = t.getVecs();
                         double z = (vecs[0].getZ() + vecs[1].getZ() + vecs[2].getZ()) / 3.0;
-                        if(z < zClosest) {
+                        if (z < zClosest) {
                             closestTriangle = t;
                             zClosest = z;
                         }
@@ -226,8 +232,11 @@ public class Display extends Canvas implements Runnable {
                     graphics.setColor(new Color(lum, lum, lum));
                 }
 
+                // Draw a section between intersection points
                 graphics.drawLine(x, y, xIntersection, y);
                 x = xIntersection; // TODO: xIntersection + 1 ?
+
+                // Update section info
                 if (!activeTriangles.contains(ae.getTriangle())) {
                     // Going inside the triangle
                     activeTriangles.add(ae.getTriangle());
@@ -374,49 +383,49 @@ public class Display extends Canvas implements Runnable {
             rightVec = Vec3D.normalise(rightVec);
             rightVec = Vec3D.mult(rightVec, cameraStep); // Velocity vector right
 
-            if (keysPressed.get("space")) {
+            if (keysPressed.get(KeyEvent.VK_SPACE)) {
                 cameraPosition = Vec3D.add(cameraPosition, upVec);
             }
-            if (keysPressed.get("shift")) {
+            if (keysPressed.get(KeyEvent.VK_SHIFT)) {
                 cameraPosition = Vec3D.subtract(cameraPosition, upVec);
             }
-            if ((keysPressed.get("d"))) {
+            if ((keysPressed.get(KeyEvent.VK_D))) {
                 cameraPosition = Vec3D.add(cameraPosition, rightVec);
             }
-            if (keysPressed.get("a")) {
+            if (keysPressed.get(KeyEvent.VK_A)) {
                 cameraPosition = Vec3D.subtract(cameraPosition, rightVec);
             }
-            if (keysPressed.get("w")) {
+            if (keysPressed.get(KeyEvent.VK_W)) {
                 cameraPosition = Vec3D.add(cameraPosition, forwardVec);
             }
-            if (keysPressed.get("s")) {
+            if (keysPressed.get(KeyEvent.VK_S)) {
                 cameraPosition = Vec3D.subtract(cameraPosition, forwardVec);
             }
 
-            if (keysPressed.get("left")) {
+            if (keysPressed.get(KeyEvent.VK_LEFT)) {
                 yaw -= 1.0;
             }
-            if (keysPressed.get("right")) {
+            if (keysPressed.get(KeyEvent.VK_RIGHT)) {
                 yaw += 1.0;
             }
-            if (keysPressed.get("down")) {
+            if (keysPressed.get(KeyEvent.VK_DOWN)) {
                 cameraRotX -= 1.0;
             }
-            if (keysPressed.get("up")) {
+            if (keysPressed.get(KeyEvent.VK_UP)) {
                 cameraRotX += 1.0;
             }
-            if (keysPressed.get("q")) {
+            if (keysPressed.get(KeyEvent.VK_Q)) {
                 cameraRotZ -= 1.0;
             }
-            if (keysPressed.get("e")) {
+            if (keysPressed.get(KeyEvent.VK_E)) {
                 cameraRotZ += 1.0;
             }
-            if (keysPressed.get("r")) {
+            if (keysPressed.get(KeyEvent.VK_R)) {
                 if (fov < 179.0) {
                     fov += 1.0;
                 }
             }
-            if (keysPressed.get("f")) {
+            if (keysPressed.get(KeyEvent.VK_F)) {
                 if (fov > 1.0) {
                     fov -= 1.0;
                 }
@@ -459,107 +468,17 @@ public class Display extends Canvas implements Runnable {
             @Override
             public void keyPressed(KeyEvent e) {
                 int keyCode = e.getKeyCode();
+                keysPressed.put(keyCode, true);
 
-                switch (keyCode) {
-                    case KeyEvent.VK_SPACE:
-                        keysPressed.put("space", true);
-                        break;
-                    case KeyEvent.VK_SHIFT:
-                        keysPressed.put("shift", true);
-                        break;
-                    case KeyEvent.VK_D:
-                        keysPressed.put("d", true);
-                        break;
-                    case KeyEvent.VK_A:
-                        keysPressed.put("a", true);
-                        break;
-                    case KeyEvent.VK_W:
-                        keysPressed.put("w", true);
-                        break;
-                    case KeyEvent.VK_S:
-                        keysPressed.put("s", true);
-                        break;
-
-                    case KeyEvent.VK_LEFT:
-                        keysPressed.put("left", true);
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        keysPressed.put("right", true);
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        keysPressed.put("down", true);
-                        break;
-                    case KeyEvent.VK_UP:
-                        keysPressed.put("up", true);
-                        break;
-                    case KeyEvent.VK_Q:
-                        keysPressed.put("q", true);
-                        break;
-                    case KeyEvent.VK_E:
-                        keysPressed.put("e", true);
-                        break;
-                    case KeyEvent.VK_R:
-                        keysPressed.put("r", true);
-                        break;
-                    case KeyEvent.VK_F:
-                        keysPressed.put("f", true);
-                        break;
-
-                    case KeyEvent.VK_M:
-                        drawMesh = !drawMesh;
-                        break;
+                if (keyCode == KeyEvent.VK_M) {
+                    drawMesh = !drawMesh;
                 }
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
                 int keyCode = e.getKeyCode();
-
-                switch (keyCode) {
-                    case KeyEvent.VK_SPACE:
-                        keysPressed.put("space", false);
-                        break;
-                    case KeyEvent.VK_SHIFT:
-                        keysPressed.put("shift", false);
-                        break;
-                    case KeyEvent.VK_D:
-                        keysPressed.put("d", false);
-                        break;
-                    case KeyEvent.VK_A:
-                        keysPressed.put("a", false);
-                        break;
-                    case KeyEvent.VK_W:
-                        keysPressed.put("w", false);
-                        break;
-                    case KeyEvent.VK_S:
-                        keysPressed.put("s", false);
-                        break;
-
-                    case KeyEvent.VK_LEFT:
-                        keysPressed.put("left", false);
-                        break;
-                    case KeyEvent.VK_RIGHT:
-                        keysPressed.put("right", false);
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        keysPressed.put("down", false);
-                        break;
-                    case KeyEvent.VK_UP:
-                        keysPressed.put("up", false);
-                        break;
-                    case KeyEvent.VK_Q:
-                        keysPressed.put("q", false);
-                        break;
-                    case KeyEvent.VK_E:
-                        keysPressed.put("e", false);
-                        break;
-                    case KeyEvent.VK_R:
-                        keysPressed.put("r", false);
-                        break;
-                    case KeyEvent.VK_F:
-                        keysPressed.put("f", false);
-                        break;
-                }
+                keysPressed.put(keyCode, false);
             }
         };
     }
