@@ -3,10 +3,8 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
@@ -188,15 +186,9 @@ public class Display extends Canvas implements Runnable {
             }
 
             // Sort active edges list by increasing order of x of the intersection point
-            activeEdges.sort((Edge e1, Edge e2) -> {
-                double a1 = (e1.p2.getY() - e1.p1.getY()) / (e1.p2.getX() - e1.p1.getX());
-                double a2 = (e2.p2.getY() - e2.p1.getY()) / (e2.p2.getX() - e2.p1.getX());
-                double b1 = e1.p1.getY() - a1 * e1.p1.getX();
-                double b2 = e2.p1.getY() - a2 * e2.p1.getX();
-                double xCross1 = (e1.p1.getY() - b1) / a1;
-                double xCross2 = (e2.p1.getY() - b2) / a2;
-                return Double.compare(xCross1, xCross2);
-            });
+            // TODO: cache xIntersection return value?
+            int finalY = y;
+            activeEdges.sort(Comparator.comparingInt((Edge e) -> e.xIntersection(finalY)));
 
             // Start from the beginning of each scanline
             int x = 0;
