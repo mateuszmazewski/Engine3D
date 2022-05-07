@@ -10,8 +10,8 @@ public class Edge {
     }
 
     public Integer xIntersection(int y) {
-        int minY = (int) Math.min(p1.getY(), p2.getY());
-        int maxY = (int) Math.max(p1.getY(), p2.getY());
+        double minY = Math.min(p1.getY(), p2.getY());
+        double maxY = Math.max(p1.getY(), p2.getY());
 
         if (y < minY || y > maxY) {
             // There is no intersection
