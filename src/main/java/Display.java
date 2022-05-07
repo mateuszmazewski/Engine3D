@@ -226,7 +226,7 @@ public class Display extends Canvas implements Runnable {
 
                 // Draw a section between intersection points
                 graphics.drawLine(x, y, xIntersection, y);
-                x = xIntersection; // TODO: xIntersection + 1 ?
+                x = xIntersection;
 
                 // Update section info
                 if (!activeTriangles.contains(ae.getTriangle())) {
@@ -237,10 +237,6 @@ public class Display extends Canvas implements Runnable {
                     activeTriangles.remove(ae.getTriangle());
                 }
             }
-
-            // Draw the rest of the line
-            graphics.setColor(Color.BLACK);
-            graphics.drawLine(x, y, WIDTH, y);
         }
     }
 
