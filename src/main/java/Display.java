@@ -8,6 +8,7 @@ import java.util.List;
 
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
+    private long currentFps = 0;
 
 
     private Thread thread;
@@ -36,6 +37,7 @@ public class Display extends Canvas implements Runnable {
     private final List<Mesh> meshes;
 
     private boolean drawMesh = false;
+    private String drawingMethod = "alg. skaningowy";
 
     public Display() {
         frame = new JFrame(title);
@@ -74,6 +76,8 @@ public class Display extends Canvas implements Runnable {
         keysPressed.put(KeyEvent.VK_E, false);
         keysPressed.put(KeyEvent.VK_R, false);
         keysPressed.put(KeyEvent.VK_F, false);
+        keysPressed.put(KeyEvent.VK_1, false);
+        keysPressed.put(KeyEvent.VK_2, false);
 
         start();
     }
@@ -118,6 +122,7 @@ public class Display extends Canvas implements Runnable {
             if (System.currentTimeMillis() - timer > 1000) {
                 timer += 1000;
                 frame.setTitle(title + " | " + frames + " FPS | " + "Camera pos.: " + cameraPosition + " | Look dir.: " + lookDirection + " | FOV: " + Util.round(fov, 2));
+                currentFps = frames;
                 frames = 0;
             }
         }
@@ -148,9 +153,13 @@ public class Display extends Canvas implements Runnable {
 
         graphics.setColor(Color.WHITE);
         if (!projectedTriangles.isEmpty()) {
-            scanlineDraw(graphics);
+            if (drawingMethod.equals("alg. skaningowy")) {
+                scanlineDraw(graphics);
+            }
             for (Triangle triangle : projectedTriangles) {
-                //fillTriangle(graphics, triangle);
+                if (drawingMethod.equals("alg. malarski")) {
+                    fillTriangle(graphics, triangle);
+                }
                 if (drawMesh) {
                     graphics.setColor(Color.WHITE);
                     drawTriangle(graphics, triangle);
@@ -158,6 +167,14 @@ public class Display extends Canvas implements Runnable {
             }
         }
 
+        graphics.setColor(Color.WHITE);
+        graphics.drawString("metoda rysowania: " + drawingMethod, 5, 20);
+        /*
+        graphics.drawString("FPS: " + currentFps, 5, 40);
+        graphics.drawString("Camera pos.: " + cameraPosition, 5, 60);
+        graphics.drawString("Look dir.: " + lookDirection, 5, 80);
+        graphics.drawString("FOV: " + Util.round(fov, 2), 5, 100);
+        */
         graphics.dispose();
         bs.show();
     }
@@ -434,6 +451,12 @@ public class Display extends Canvas implements Runnable {
                 if (fov > 1.0) {
                     fov -= 1.0;
                 }
+            }
+            if (keysPressed.get(KeyEvent.VK_1)) {
+                drawingMethod = "alg. skaningowy";
+            }
+            if (keysPressed.get(KeyEvent.VK_2)) {
+                drawingMethod = "alg. malarski";
             }
         }
     }
