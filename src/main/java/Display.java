@@ -165,6 +165,7 @@ public class Display extends Canvas implements Runnable {
     private void scanlineDraw(Graphics2D graphics) {
         List<Edge> edges = new ArrayList<>();
         List<Edge> activeEdges = new ArrayList<>();
+        List<Edge> parallelToXEdges = new ArrayList<>();
 
         // Initialize edges list with all edges with their corresponding endpoints
         for (Triangle t : projectedTriangles) {
@@ -177,11 +178,16 @@ public class Display extends Canvas implements Runnable {
         // Iterate through every scanline
         for (int y = 0; y < HEIGHT; y++) {
             activeEdges.clear();
+            parallelToXEdges.clear();
 
             // Initialize active edges list with all edges that are crossing by the current scanline
             for (Edge e : edges) {
-                if (e.xIntersection(y) != null) {
-                    activeEdges.add(e);
+                if ((int) e.getP1().getY() != (int) e.getP2().getY()) {
+                    if (e.xIntersection(y) != null) {
+                        activeEdges.add(e);
+                    }
+                } else if ((int) e.getP1().getY() == y) {
+                    parallelToXEdges.add(e);
                 }
             }
 
@@ -236,6 +242,17 @@ public class Display extends Canvas implements Runnable {
                     // Going outside the triangle
                     activeTriangles.remove(ae.getTriangle());
                 }
+            }
+
+            // TODO: apply depth
+            for (Edge e : parallelToXEdges) {
+                // TODO: apply luminance
+                //int lum = (int) (255 * closestTriangle.getLuminance());
+                int lum = 255;
+                graphics.setColor(new Color(lum, lum, lum));
+
+                // Draw a section between intersection points
+                graphics.drawLine((int) e.getP1().getX(), y, (int) e.getP2().getX(), y);
             }
         }
     }
