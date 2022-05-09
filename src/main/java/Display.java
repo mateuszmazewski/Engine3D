@@ -44,6 +44,7 @@ public class Display extends Canvas implements Runnable {
     private int meshId = 0;
 
     private boolean drawMesh = false;
+    private boolean scanlineProof = false;
     private String drawingMethod = "alg. skaningowy";
 
     public Display() {
@@ -206,7 +207,7 @@ public class Display extends Canvas implements Runnable {
         }
 
         // Iterate through every scanline
-        for (int y = 0; y < HEIGHT; y++) {
+        for (int y = 0; y < HEIGHT; y += scanlineProof ? 5 : 1) {
             activeEdges.clear();
             parallelToXEdges.clear();
 
@@ -526,6 +527,9 @@ public class Display extends Canvas implements Runnable {
                     System.out.println(meshId);
                     currentMeshes.clear();
                     currentMeshes.add(allMeshes.get(meshId));
+                }
+                if (keyCode == KeyEvent.VK_P) {
+                    scanlineProof = !scanlineProof;
                 }
             }
 
