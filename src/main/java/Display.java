@@ -246,9 +246,20 @@ public class Display extends Canvas implements Runnable {
                     double zClosest = (ctVecs[0].getZ() + ctVecs[1].getZ() + ctVecs[2].getZ()) / 3.0;
                     for (Triangle t : activeTriangles) {
                         int xMid = (x + xIntersection) / 2;
-                        // TODO: Calculate z for x = xMid
-                        Vec3D[] vecs = t.getVecs();
-                        double z = (vecs[0].getZ() + vecs[1].getZ() + vecs[2].getZ()) / 3.0;
+
+                        // Calculate z for x = xMid
+                        double x1 = t.getVecs()[0].getX();
+                        double x2 = t.getVecs()[1].getX();
+                        double x3 = t.getVecs()[2].getX();
+                        double y1 = t.getVecs()[0].getY();
+                        double y2 = t.getVecs()[1].getY();
+                        double y3 = t.getVecs()[2].getY();
+                        double z1 = t.getVecs()[0].getZ();
+                        double z2 = t.getVecs()[1].getZ();
+                        double z3 = t.getVecs()[2].getZ();
+                        double denominator = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
+                        double z = z1 + ((x2 - x1) * (z3 - z1) - (x3 - x1) * (z2 - z1)) / denominator * (y - y1) - ((y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1)) / denominator * (xMid - x1);
+
                         if (z < zClosest) {
                             closestTriangle = t;
                             zClosest = z;
