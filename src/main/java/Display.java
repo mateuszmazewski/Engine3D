@@ -260,6 +260,11 @@ public class Display extends Canvas implements Runnable {
                         double denominator = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
                         double z = z1 + ((x2 - x1) * (z3 - z1) - (x3 - x1) * (z2 - z1)) / denominator * (y - y1) - ((y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1)) / denominator * (xMid - x1);
 
+                        Vec3D xMidPoint = new Vec3D(xMid, y, z);
+                        Vec3D rayFromCameraToxMidPoint = Vec3D.subtract(xMidPoint, cameraPosition);
+                        double distance = Vec3D.length(rayFromCameraToxMidPoint);
+                        z -= distance;
+
                         if (z < zClosest) {
                             closestTriangle = t;
                             zClosest = z;
@@ -534,7 +539,6 @@ public class Display extends Canvas implements Runnable {
                 }
                 if (keyCode == KeyEvent.VK_N) {
                     meshId = (meshId + 1) % allMeshes.size();
-                    System.out.println(meshId);
                     currentMeshes.clear();
                     currentMeshes.add(allMeshes.get(meshId));
                 }
