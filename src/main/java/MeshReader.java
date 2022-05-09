@@ -17,6 +17,7 @@ public class MeshReader {
 
         Vec3D vec3d;
         Vec3D[] triangleVecs = {null, null, null};
+        Triangle triangle = new Triangle();
 
         File file = new File(filename);
         try {
@@ -29,6 +30,15 @@ public class MeshReader {
                 }
 
                 splittedLine = line.split("\\s+|,\\s+");
+
+                if (splittedLine.length == 4 && splittedLine[0].equals("rgb")) {
+                    int r = Integer.parseInt(splittedLine[1]);
+                    int g = Integer.parseInt(splittedLine[2]);
+                    int b = Integer.parseInt(splittedLine[3]);
+                    triangle.setRGB(r, g, b);
+                    continue;
+                }
+
                 if (splittedLine.length != 3) { // Not a triangle
                     throw new IOException(filename + ", line " + linesCount + ": Not a triangle");
                 }
@@ -43,7 +53,9 @@ public class MeshReader {
                 vec3dCount++;
 
                 if (vec3dCount == 3) {
-                    mesh.addTriangle(new Triangle(triangleVecs.clone()));
+                    triangle.setVecs(triangleVecs.clone());
+                    mesh.addTriangle(triangle);
+                    triangle = new Triangle();
                     vec3dCount = 0;
                 }
             }

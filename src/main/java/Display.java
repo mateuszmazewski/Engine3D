@@ -58,8 +58,8 @@ public class Display extends Canvas implements Runnable {
         MeshReader meshReader = new MeshReader();
         Mesh cubes = meshReader.readMeshFromFile(meshFilename);
         Mesh teapot = meshReader.readFromObjFile(teapotFilename);
-        //meshes.add(cubes);
-        meshes.add(teapot);
+        meshes.add(cubes);
+        //meshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put(KeyEvent.VK_W, false);
@@ -225,8 +225,7 @@ public class Display extends Canvas implements Runnable {
                     graphics.setColor(Color.BLACK);
                 } else if (activeTriangles.size() == 1) {
                     // One triangle -- no overlapping, so draw this triangle
-                    int lum = (int) (255 * activeTriangles.get(0).getLuminance());
-                    graphics.setColor(new Color(lum, lum, lum));
+                    determineColor(graphics, activeTriangles.get(0));
                 } else {
                     // More than one triangle -- find out which is the closest one and draw only this one
                     Triangle closestTriangle = activeTriangles.get(0);
@@ -243,8 +242,7 @@ public class Display extends Canvas implements Runnable {
                         }
                     }
 
-                    int lum = (int) (255 * closestTriangle.getLuminance());
-                    graphics.setColor(new Color(lum, lum, lum));
+                    determineColor(graphics, closestTriangle);
                 }
 
                 // Draw a section between intersection points
@@ -481,9 +479,18 @@ public class Display extends Canvas implements Runnable {
         // Create a polygon representing the triangle
         Polygon p = new Polygon(xPoints, yPoints, 3);
 
-        int lum = (int) (255 * triangle.getLuminance());
-        g.setColor(new Color(lum, lum, lum));
+        determineColor(g, triangle);
+
         g.fillPolygon(p);
+    }
+
+    private void determineColor(Graphics g, Triangle triangle) {
+        if (triangle.getR() != null && triangle.getG() != null && triangle.getB() != null) {
+            g.setColor(new Color(triangle.getR(), triangle.getG(), triangle.getB()));
+        } else {
+            int lum = (int) (255 * triangle.getLuminance());
+            g.setColor(new Color(lum, lum, lum));
+        }
     }
 
     private KeyListener createKeyListener() {
