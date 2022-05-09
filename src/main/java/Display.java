@@ -19,8 +19,9 @@ public class Display extends Canvas implements Runnable {
     private final static int HEIGHT = 600;
     private static boolean running = false;
 
-    String meshFilename = "mesh.txt";
-    String teapotFilename = "teapot.obj";
+    String cubesMeshFilename = "cubes.txt";
+    String trianglesMeshFilename = "triangles.txt";
+    String teapotMeshFilename = "teapot.obj";
 
     private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
@@ -33,8 +34,14 @@ public class Display extends Canvas implements Runnable {
 
     private final double cameraStep = 0.1;
 
+    Mesh cubes;
+    Mesh triangles;
+    Mesh teapot;
+
     private final List<Triangle> projectedTriangles;
-    private final List<Mesh> meshes;
+    private final List<Mesh> currentMeshes;
+    private final List<Mesh> allMeshes;
+    private int meshId = 0;
 
     private boolean drawMesh = false;
     private String drawingMethod = "alg. skaningowy";
@@ -53,13 +60,18 @@ public class Display extends Canvas implements Runnable {
         frame.addKeyListener(createKeyListener());
 
         projectedTriangles = new ArrayList<>();
-        meshes = new ArrayList<>();
+        currentMeshes = new ArrayList<>();
+        allMeshes = new ArrayList<>();
 
         MeshReader meshReader = new MeshReader();
-        Mesh cubes = meshReader.readMeshFromFile(meshFilename);
-        Mesh teapot = meshReader.readFromObjFile(teapotFilename);
-        meshes.add(cubes);
-        //meshes.add(teapot);
+        cubes = meshReader.readMeshFromFile(cubesMeshFilename);
+        triangles = meshReader.readMeshFromFile(trianglesMeshFilename);
+        teapot = meshReader.readFromObjFile(teapotMeshFilename);
+
+        allMeshes.add(cubes);
+        allMeshes.add(triangles);
+        allMeshes.add(teapot);
+        currentMeshes.add(teapot);
 
         keysPressed = new HashMap<>();
         keysPressed.put(KeyEvent.VK_W, false);
@@ -78,6 +90,7 @@ public class Display extends Canvas implements Runnable {
         keysPressed.put(KeyEvent.VK_F, false);
         keysPressed.put(KeyEvent.VK_1, false);
         keysPressed.put(KeyEvent.VK_2, false);
+        keysPressed.put(KeyEvent.VK_TAB, false);
 
         start();
     }
@@ -309,7 +322,7 @@ public class Display extends Canvas implements Runnable {
         Vec3D[] vecs;
 
         projectedTriangles.clear();
-        for (Mesh mesh : meshes) {
+        for (Mesh mesh : currentMeshes) {
             for (Triangle t : mesh.getTriangles()) {
                 transformedTriangle = t.clone();
                 vecs = transformedTriangle.getVecs();
@@ -507,6 +520,12 @@ public class Display extends Canvas implements Runnable {
 
                 if (keyCode == KeyEvent.VK_M) {
                     drawMesh = !drawMesh;
+                }
+                if (keyCode == KeyEvent.VK_N) {
+                    meshId = (meshId + 1) % allMeshes.size();
+                    System.out.println(meshId);
+                    currentMeshes.clear();
+                    currentMeshes.add(allMeshes.get(meshId));
                 }
             }
 
