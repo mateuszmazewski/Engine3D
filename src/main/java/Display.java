@@ -213,8 +213,9 @@ public class Display extends Canvas implements Runnable {
 
             // Initialize active edges list with all edges that are crossing by the current scanline
             for (Edge e : edges) {
+                e.setxIntersection(e.xIntersection(y));
                 if ((int) e.getP1().getY() != (int) e.getP2().getY()) {
-                    if (e.xIntersection(y) != null) {
+                    if (e.getxIntersection() != null) {
                         activeEdges.add(e);
                     }
                 } else if ((int) e.getP1().getY() == y) {
@@ -223,16 +224,14 @@ public class Display extends Canvas implements Runnable {
             }
 
             // Sort active edges list by increasing order of x of the intersection point
-            // TODO: cache xIntersection return value?
-            int finalY = y;
-            activeEdges.sort(Comparator.comparingInt((Edge e) -> e.xIntersection(finalY)));
+            activeEdges.sort(Comparator.comparingInt(Edge::getxIntersection));
 
             // Start from the beginning of each scanline
             int x = 0;
             List<Triangle> activeTriangles = new ArrayList<>();
 
             for (Edge ae : activeEdges) {
-                int xIntersection = ae.xIntersection(y);
+                int xIntersection = ae.getxIntersection();
 
                 if (activeTriangles.size() == 0) {
                     // No triangles -- draw background

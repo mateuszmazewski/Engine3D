@@ -2,6 +2,7 @@ public class Edge {
     Triangle triangle;
     Vec3D p1;
     Vec3D p2;
+    Integer xIntersection;
 
     public Edge(Triangle triangle, Vec3D p1, Vec3D p2) {
         this.triangle = triangle;
@@ -43,5 +44,13 @@ public class Edge {
 
     public void setP2(Vec3D p2) {
         this.p2 = p2;
+    }
+
+    public Integer getxIntersection() {
+        return xIntersection;
+    }
+
+    public void setxIntersection(Integer xIntersection) {
+        this.xIntersection = xIntersection;
     }
 }
