@@ -85,7 +85,7 @@ public class MeshReader {
 
             while ((line = reader.readLine()) != null) {
                 linesCount++;
-                if (line.startsWith("//") || line.trim().isEmpty()) {
+                if (line.startsWith("//") || line.startsWith("#") || line.trim().isEmpty()) {
                     continue;
                 }
 

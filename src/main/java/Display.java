@@ -22,6 +22,7 @@ public class Display extends Canvas implements Runnable {
     String cubesMeshFilename = "cubes.txt";
     String trianglesMeshFilename = "triangles.txt";
     String teapotMeshFilename = "teapot.obj";
+    String cowMeshFilename = "cow.obj";
 
     private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
@@ -37,6 +38,7 @@ public class Display extends Canvas implements Runnable {
     Mesh cubes;
     Mesh triangles;
     Mesh teapot;
+    Mesh cow;
 
     private final List<Triangle> projectedTriangles;
     private final List<Mesh> currentMeshes;
@@ -46,6 +48,9 @@ public class Display extends Canvas implements Runnable {
     private boolean drawMesh = false;
     private boolean scanlineProof = false;
     private String drawingMethod = "alg. skaningowy";
+    private boolean rotXactive = false;
+    private boolean rotYactive = false;
+    private boolean rotZactive = false;
 
     public Display() {
         frame = new JFrame(title);
@@ -68,10 +73,12 @@ public class Display extends Canvas implements Runnable {
         cubes = meshReader.readMeshFromFile(cubesMeshFilename);
         triangles = meshReader.readMeshFromFile(trianglesMeshFilename);
         teapot = meshReader.readFromObjFile(teapotMeshFilename);
+        cow = meshReader.readFromObjFile(cowMeshFilename);
 
         allMeshes.add(cubes);
         allMeshes.add(triangles);
         allMeshes.add(teapot);
+        allMeshes.add(cow);
         currentMeshes.add(teapot);
 
         keysPressed = new HashMap<>();
@@ -92,6 +99,9 @@ public class Display extends Canvas implements Runnable {
         keysPressed.put(KeyEvent.VK_1, false);
         keysPressed.put(KeyEvent.VK_2, false);
         keysPressed.put(KeyEvent.VK_TAB, false);
+        keysPressed.put(KeyEvent.VK_X, false);
+        keysPressed.put(KeyEvent.VK_Y, false);
+        keysPressed.put(KeyEvent.VK_Z, false);
 
         start();
     }
@@ -285,13 +295,23 @@ public class Display extends Canvas implements Runnable {
     }
 
     public void update() {
-        double angle = 0.0;//System.currentTimeMillis() / 1000.0;
+        double angle = System.currentTimeMillis() / 1000.0;
         Matrix matrixRotX = Matrix.makeRotationX(angle);
+        Matrix matrixRotY = Matrix.makeRotationY(angle);
         Matrix matrixRotZ = Matrix.makeRotationZ(angle);
 
         Matrix matrixTranslation = Matrix.makeTranslation(0.0, 0.0, 3.0); // Optionally move whole scene
 
-        Matrix worldMatrix = Matrix.mult(matrixRotZ, matrixRotX);
+        Matrix worldMatrix = Matrix.makeIdentity();
+        if (rotXactive) {
+            worldMatrix = Matrix.mult(worldMatrix, matrixRotX);
+        }
+        if (rotYactive) {
+            worldMatrix = Matrix.mult(worldMatrix, matrixRotY);
+        }
+        if (rotZactive) {
+            worldMatrix = Matrix.mult(worldMatrix, matrixRotZ);
+        }
         worldMatrix = Matrix.mult(worldMatrix, matrixTranslation);
 
         Vec3D upVec = new Vec3D(0, 1, 0);
@@ -527,6 +547,15 @@ public class Display extends Canvas implements Runnable {
                 }
                 if (keyCode == KeyEvent.VK_P) {
                     scanlineProof = !scanlineProof;
+                }
+                if (keyCode == KeyEvent.VK_X) {
+                    rotXactive = !rotXactive;
+                }
+                if (keyCode == KeyEvent.VK_Y) {
+                    rotYactive = !rotYactive;
+                }
+                if (keyCode == KeyEvent.VK_Z) {
+                    rotZactive = !rotZactive;
                 }
             }
 
