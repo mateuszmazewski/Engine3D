@@ -14,7 +14,7 @@ public class Edge {
         double minY = Math.min(p1.getY(), p2.getY());
         double maxY = Math.max(p1.getY(), p2.getY());
 
-        if (y < minY || y > maxY) {
+        if (y <= minY || y >= maxY) {
             // There is no intersection
             return null;
         }
