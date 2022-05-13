@@ -246,8 +246,7 @@ public class Display extends Canvas implements Runnable {
                 } else {
                     // More than one triangle -- find out which is the closest one and draw only this one
                     Triangle closestTriangle = activeTriangles.get(0);
-                    Vec3D[] ctVecs = closestTriangle.getVecs();
-                    double zClosest = (ctVecs[0].getZ() + ctVecs[1].getZ() + ctVecs[2].getZ()) / 3.0;
+                    double zClosest = Double.MAX_VALUE;
                     for (Triangle t : activeTriangles) {
                         int xMid = (x + xIntersection) / 2;
 
