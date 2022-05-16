@@ -90,9 +90,9 @@ public class MeshReader {
                 }
 
                 splittedLine = line.split("\\s+");
-                if (splittedLine.length != 4) {
-                    throw new IOException(filename + ", line " + linesCount + ": Invalid data");
-                }
+                //if (splittedLine.length != 4) {
+                //    throw new IOException(filename + ", line " + linesCount + ": Invalid data");
+                //}
 
                 vec3d = new Vec3D();
 

@@ -23,6 +23,8 @@ public class Display extends Canvas implements Runnable {
     String trianglesMeshFilename = "triangles.txt";
     String teapotMeshFilename = "teapot.obj";
     String cowMeshFilename = "cow.obj";
+    String catMeshFilename = "cat.obj";
+    String spotMeshFilename = "spot.obj";
 
     private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
@@ -39,6 +41,8 @@ public class Display extends Canvas implements Runnable {
     Mesh triangles;
     Mesh teapot;
     Mesh cow;
+    Mesh cat;
+    Mesh spot;
 
     private final List<Triangle> projectedTriangles;
     private final List<Mesh> currentMeshes;
@@ -74,11 +78,15 @@ public class Display extends Canvas implements Runnable {
         triangles = meshReader.readMeshFromFile(trianglesMeshFilename);
         teapot = meshReader.readFromObjFile(teapotMeshFilename);
         cow = meshReader.readFromObjFile(cowMeshFilename);
+        cat = meshReader.readFromObjFile(catMeshFilename);
+        spot = meshReader.readFromObjFile(spotMeshFilename);
 
         allMeshes.add(cubes);
         allMeshes.add(triangles);
         allMeshes.add(teapot);
         allMeshes.add(cow);
+        allMeshes.add(cat);
+        allMeshes.add(spot);
         currentMeshes.add(teapot);
 
         keysPressed = new HashMap<>();
