@@ -324,23 +324,22 @@ public class Display extends Canvas implements Runnable {
                     graphics.drawLine(x, y, xIntersection, y);
                 } else {
                     // TODO kolejność wierzchołków
-                    Vec3D a = uniqueVecs.get(closestTri.getVecs()[0]);
-                    Vec3D b = uniqueVecs.get(closestTri.getVecs()[1]);
-                    Vec3D c = uniqueVecs.get(closestTri.getVecs()[2]);
+                    Vec3D[] vecs = getVecsWithGouraudOrder(closestTri, y);
+                    Vec3D a = vecs[0];
+                    Vec3D b = vecs[1];
+                    Vec3D c = vecs[2];
 
                     //System.out.println(a.getLum() + " " + b.getLum() + " " + c.getLum() + "\n");
 
-                    // TODO - abs() ?
-                    double lumX = a.getLum() * abs(b.getY() - y) / abs(b.getY() - a.getY()) + b.getLum() * abs(y - a.getY()) / abs(b.getY() - a.getY());
-                    double lumXIntersection = a.getLum() * abs(c.getY() - y) / abs(c.getY() - a.getY()) + c.getLum() * abs(y - a.getY()) / abs(c.getY() - a.getY());
-                    // TODO jeśli wierzchołki będą w odpowiedniej kolejności, wtedy ify ani %255 nie powinny być potrzebne
-                    if (lumX < 0.0) {
-                        lumX = 1.0;
+                    double lumX = a.getLum() * (b.getY() - y) / (b.getY() - a.getY()) + b.getLum() * (y - a.getY()) / (b.getY() - a.getY()); // I_D
+                    double lumXIntersection;
+                    if (a.getY() != c.getY()) {
+                        lumXIntersection = a.getLum() * (c.getY() - y) / (c.getY() - a.getY()) + c.getLum() * (y - a.getY()) / (c.getY() - a.getY());
+                    } else {
+                        lumXIntersection = a.getLum() * (c.getX() - xIntersection) / (c.getX() - a.getX()) + c.getLum() * (xIntersection - a.getX()) / (c.getX() - a.getX());
                     }
-                    if (lumXIntersection < 0.0) {
-                        lumXIntersection = 1.0;
-                    }
-                    drawGradientLine(graphics, (int) (lumX * 255) % 255, (int) (lumXIntersection * 255) % 255, x, xIntersection, y, y);
+
+                    drawGradientLine(graphics, (int) (lumX * 255), (int) (lumXIntersection * 255), x, xIntersection, y, y);
                 }
                 x = xIntersection;
 
@@ -354,6 +353,21 @@ public class Display extends Canvas implements Runnable {
                 }
             }
         }
+    }
+
+    // returns triangle's vecs, with first element being the one that contains two edges intersecting with Y
+    private Vec3D[] getVecsWithGouraudOrder(Triangle triangle, int y) {
+        Vec3D[] vecs = triangle.getVecs();
+        int vecsLength = vecs.length; // always equal 3 btw
+        // we could just check if the edge between remaining vecs does not intersect, however that may fail in some cases
+        for (int i = 0; i < vecsLength; i++) {
+            Edge e1 = new Edge(triangle, vecs[i], vecs[(i + 1) % vecsLength]);
+            Edge e2 = new Edge(triangle, vecs[i], vecs[(i + 2) % vecsLength]);
+            if (e1.xIntersection(y) != null && e2.xIntersection(y) != null) {
+                return new Vec3D[]{vecs[i], vecs[(i + 1) % vecsLength], vecs[(i + 2) % vecsLength]};
+            }
+        }
+        return null;
     }
 
     private void drawGradientLine(Graphics2D g2d, int startLum, int endLum, int startX, int endX, int startY, int endY) {
