@@ -323,11 +323,10 @@ public class Display extends Canvas implements Runnable {
                     // Draw a section between intersection points
                     graphics.drawLine(x, y, xIntersection, y);
                 } else {
-                    // TODO kolejność wierzchołków
                     Vec3D[] vecs = getVecsWithGouraudOrder(closestTri, y);
-                    Vec3D a = vecs[0];
-                    Vec3D b = vecs[1];
-                    Vec3D c = vecs[2];
+                    Vec3D a = uniqueVecs.get(vecs[0]);
+                    Vec3D b = uniqueVecs.get(vecs[1]);
+                    Vec3D c = uniqueVecs.get(vecs[2]);
 
                     //System.out.println(a.getLum() + " " + b.getLum() + " " + c.getLum() + "\n");
 
@@ -367,7 +366,7 @@ public class Display extends Canvas implements Runnable {
                 return new Vec3D[]{vecs[i], vecs[(i + 1) % vecsLength], vecs[(i + 2) % vecsLength]};
             }
         }
-        return null;
+        return null; // sometimes happens, i have no idea why
     }
 
     private void drawGradientLine(Graphics2D g2d, int startLum, int endLum, int startX, int endX, int startY, int endY) {
