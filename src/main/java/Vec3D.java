@@ -1,8 +1,13 @@
+import java.util.Objects;
+
+import static java.lang.Math.abs;
+
 public class Vec3D {
     private double x = 0.0;
     private double y = 0.0;
     private double z = 0.0;
     private double w = 1.0;
+    private double lum = 0.0;
 
     public Vec3D() {
     }
@@ -110,7 +115,30 @@ public class Vec3D {
         this.z = z;
     }
 
+    public double getLum() {
+        return lum;
+    }
+
+    public void setLum(double lum) {
+        this.lum = lum;
+    }
+
     public String toString() {
         return "[" + Util.round(x, 2) + ", " + Util.round(y, 2) + ", " + Util.round(z, 2) + "]";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Vec3D) {
+            Vec3D vec = (Vec3D) o;
+            return abs(vec.x - x) < Util.EPS && abs(vec.y - y) < Util.EPS && abs(vec.z - z) < Util.EPS && abs(vec.w - w) < Util.EPS;
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, z, w);
     }
 }

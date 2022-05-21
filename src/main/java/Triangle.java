@@ -17,6 +17,8 @@ public class Triangle {
             clonedVecs[i].setX(vecs[i].getX());
             clonedVecs[i].setY(vecs[i].getY());
             clonedVecs[i].setZ(vecs[i].getZ());
+
+            clonedVecs[i].setLum(vecs[i].getLum());
         }
         clonedTriangle.vecs = clonedVecs;
         clonedTriangle.luminance = luminance;

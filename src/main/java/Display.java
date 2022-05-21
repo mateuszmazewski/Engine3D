@@ -6,6 +6,8 @@ import java.awt.image.BufferStrategy;
 import java.util.*;
 import java.util.List;
 
+import static java.lang.Math.abs;
+
 public class Display extends Canvas implements Runnable {
     private static final int FRAMES_PER_SECOND = 60;
     private long currentFps = 0;
@@ -215,6 +217,35 @@ public class Display extends Canvas implements Runnable {
         List<Edge> edges = new ArrayList<>();
         List<Edge> activeEdges = new ArrayList<>();
 
+        for (Triangle t : projectedTriangles) {
+            for (Vec3D v : t.getVecs()) {
+                v.setLum(t.getLuminance());
+            }
+        }
+
+        // TODO - poprawić <Vec3D, Vec3D>
+        Map<Vec3D, Vec3D> uniqueVecs = new HashMap<>();
+        Map<Vec3D, Integer> vecsCount = new HashMap<>();
+        for (Triangle t : projectedTriangles) {
+            for (Vec3D vec : t.getVecs()) {
+                if (uniqueVecs.containsKey(vec)) {
+                    Vec3D v = uniqueVecs.get(vec);
+                    int count = vecsCount.get(v);
+                    v.setLum((v.getLum() * count + vec.getLum()) / (count + 1));
+                } else {
+                    uniqueVecs.put(vec, vec);
+                }
+
+                if (vecsCount.containsKey(vec)) {
+                    int count = vecsCount.get(vec);
+                    count++;
+                    vecsCount.replace(vec, count);
+                } else {
+                    vecsCount.put(vec, 1);
+                }
+            }
+        }
+
         // Initialize edges list with all edges with their corresponding endpoints
         for (Triangle t : projectedTriangles) {
             Vec3D[] vecs = t.getVecs();
@@ -245,12 +276,14 @@ public class Display extends Canvas implements Runnable {
             for (Edge ae : activeEdges) {
                 int xIntersection = ae.getxIntersection();
 
+                Triangle closestTri = null;
                 if (activeTriangles.size() == 0) {
                     // No triangles -- draw background
                     graphics.setColor(Color.BLACK);
                 } else if (activeTriangles.size() == 1) {
                     // One triangle -- no overlapping, so draw this triangle
                     determineColor(graphics, activeTriangles.get(0));
+                    closestTri = activeTriangles.get(0);
                 } else {
                     // More than one triangle -- find out which is the closest one and draw only this one
                     Triangle closestTriangle = activeTriangles.get(0);
@@ -283,10 +316,32 @@ public class Display extends Canvas implements Runnable {
                     }
 
                     determineColor(graphics, closestTriangle);
+                    closestTri = closestTriangle;
                 }
 
-                // Draw a section between intersection points
-                graphics.drawLine(x, y, xIntersection, y);
+                if (closestTri == null) {
+                    // Draw a section between intersection points
+                    graphics.drawLine(x, y, xIntersection, y);
+                } else {
+                    // TODO kolejność wierzchołków
+                    Vec3D a = uniqueVecs.get(closestTri.getVecs()[0]);
+                    Vec3D b = uniqueVecs.get(closestTri.getVecs()[1]);
+                    Vec3D c = uniqueVecs.get(closestTri.getVecs()[2]);
+
+                    //System.out.println(a.getLum() + " " + b.getLum() + " " + c.getLum() + "\n");
+
+                    // TODO - abs() ?
+                    double lumX = a.getLum() * abs(b.getY() - y) / abs(b.getY() - a.getY()) + b.getLum() * abs(y - a.getY()) / abs(b.getY() - a.getY());
+                    double lumXIntersection = a.getLum() * abs(c.getY() - y) / abs(c.getY() - a.getY()) + c.getLum() * abs(y - a.getY()) / abs(c.getY() - a.getY());
+                    // TODO jeśli wierzchołki będą w odpowiedniej kolejności, wtedy ify ani %255 nie powinny być potrzebne
+                    if (lumX < 0.0) {
+                        lumX = 1.0;
+                    }
+                    if (lumXIntersection < 0.0) {
+                        lumXIntersection = 1.0;
+                    }
+                    drawGradientLine(graphics, (int) (lumX * 255) % 255, (int) (lumXIntersection * 255) % 255, x, xIntersection, y, y);
+                }
                 x = xIntersection;
 
                 // Update section info
@@ -299,6 +354,16 @@ public class Display extends Canvas implements Runnable {
                 }
             }
         }
+    }
+
+    private void drawGradientLine(Graphics2D g2d, int startLum, int endLum, int startX, int endX, int startY, int endY) {
+        Color startColor = new Color(startLum, startLum, startLum);
+        Color endColor = new Color(endLum, endLum, endLum);
+
+        GradientPaint gradient = new GradientPaint(startX, startY, startColor, endX, endY, endColor);
+        g2d.setPaint(gradient);
+
+        g2d.drawLine(startX, startY, endX, endY);
     }
 
     public void update() {
@@ -403,7 +468,7 @@ public class Display extends Canvas implements Runnable {
                     }
 
                     // Partial clipping -- count how many verts of a triangle are invisible
-                    if (Math.abs(vecs[i].getX()) > 1.0 || Math.abs(vecs[i].getY()) > 1.0 || Math.abs(vecs[i].getZ()) > 1) {
+                    if (abs(vecs[i].getX()) > 1.0 || abs(vecs[i].getY()) > 1.0 || abs(vecs[i].getZ()) > 1) {
                         invisibleVecs++;
                     }
 
