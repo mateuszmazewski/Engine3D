@@ -363,10 +363,18 @@ public class Display extends Canvas implements Runnable {
             Edge e1 = new Edge(triangle, vecs[i], vecs[(i + 1) % vecsLength]);
             Edge e2 = new Edge(triangle, vecs[i], vecs[(i + 2) % vecsLength]);
             if (e1.xIntersection(y) != null && e2.xIntersection(y) != null) {
-                return new Vec3D[]{vecs[i], vecs[(i + 1) % vecsLength], vecs[(i + 2) % vecsLength]};
+                vecs = new Vec3D[]{vecs[i], vecs[(i + 1) % vecsLength], vecs[(i + 2) % vecsLength]};
+                break;
             }
         }
-        return null; // sometimes happens, i have no idea why
+        // TODO: sometimes the loop does not quit by break
+
+        if (vecs[1].getX() > vecs[2].getX()) {
+            Vec3D temp = vecs[2];
+            vecs[2] = vecs[1];
+            vecs[1] = temp;
+        }
+        return vecs;
     }
 
     private void drawGradientLine(Graphics2D g2d, int startLum, int endLum, int startX, int endX, int startY, int endY) {
