@@ -27,6 +27,7 @@ public class Display extends Canvas implements Runnable {
     String cowMeshFilename = "cow.obj";
     String catMeshFilename = "cat.obj";
     String spotMeshFilename = "spot.obj";
+    String sphereMeshFilename = "sphere.obj";
 
     private Vec3D cameraPosition = new Vec3D(0, 0, 0);
     private Vec3D lookDirection; // Unit vector that points the direction that camera is turned into
@@ -45,6 +46,7 @@ public class Display extends Canvas implements Runnable {
     Mesh cow;
     Mesh cat;
     Mesh spot;
+    Mesh sphere;
 
     private final List<Triangle> projectedTriangles;
     private final List<Mesh> currentMeshes;
@@ -82,6 +84,7 @@ public class Display extends Canvas implements Runnable {
         cow = meshReader.readFromObjFile(cowMeshFilename);
         cat = meshReader.readFromObjFile(catMeshFilename);
         spot = meshReader.readFromObjFile(spotMeshFilename);
+        sphere = meshReader.readFromObjFile(sphereMeshFilename);
 
         allMeshes.add(cubes);
         allMeshes.add(triangles);
@@ -89,6 +92,7 @@ public class Display extends Canvas implements Runnable {
         allMeshes.add(cow);
         allMeshes.add(cat);
         allMeshes.add(spot);
+        allMeshes.add(sphere);
         currentMeshes.add(teapot);
 
         keysPressed = new HashMap<>();
@@ -217,11 +221,13 @@ public class Display extends Canvas implements Runnable {
         List<Edge> edges = new ArrayList<>();
         List<Edge> activeEdges = new ArrayList<>();
 
+        /*
         for (Triangle t : projectedTriangles) {
             for (Vec3D v : t.getVecs()) {
                 v.setLum(t.getLuminance());
             }
         }
+        */
 
         // TODO - poprawić <Vec3D, Vec3D>
         Map<Vec3D, Vec3D> uniqueVecs = new HashMap<>();
@@ -461,11 +467,19 @@ public class Display extends Canvas implements Runnable {
                 }
 
                 // Illumination
-                Vec3D lightDirection = new Vec3D(0, 0, -1);
-                lightDirection = Vec3D.normalise(lightDirection);
-                double dotProduct = Vec3D.dotProduct(normal, lightDirection);
-                if (dotProduct > 0.0) {
-                    transformedTriangle.setLuminance(dotProduct);
+                Vec3D lightSourcePos = new Vec3D(0, 0, 0);
+                //lightSourcePos = Vec3D.normalise(lightSourcePos);
+
+                Vec3D rayFromVecToLightSource;
+                double[] vecsLum = {0.0, 0.0, 0.0};
+                for (int i = 0; i < 3; i++) {
+                    Vec3D vec = vecs[i];
+                    rayFromVecToLightSource = Vec3D.subtract(lightSourcePos, vec);
+                    rayFromVecToLightSource = Vec3D.normalise(rayFromVecToLightSource);
+                    double dotProduct = Vec3D.dotProduct(normal, rayFromVecToLightSource);
+                    if (dotProduct > 0.0) {
+                        vecsLum[i] = dotProduct;
+                    }
                 }
 
                 // Convert from world space to view space
@@ -507,6 +521,10 @@ public class Display extends Canvas implements Runnable {
                 }
                 // Partial clipping -- remove only when all 3 verts are invisible
                 if (invisibleVecs < 3) {
+                    Vec3D[] projectedVecs = projectedTriangle.getVecs();
+                    for (int i = 0; i < 3; i++) {
+                        projectedVecs[i].setLum(vecsLum[i]);
+                    }
                     projectedTriangles.add(projectedTriangle);
                 }
             }
