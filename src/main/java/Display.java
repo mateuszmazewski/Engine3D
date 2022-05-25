@@ -321,7 +321,6 @@ public class Display extends Canvas implements Runnable {
                         }
                     }
 
-                    determineColor(graphics, closestTriangle);
                     closestTri = closestTriangle;
                 }
 
@@ -344,7 +343,12 @@ public class Display extends Canvas implements Runnable {
                         lumXIntersection = a.getLum() * (c.getX() - xIntersection) / (c.getX() - a.getX()) + c.getLum() * (xIntersection - a.getX()) / (c.getX() - a.getX());
                     }
 
-                    drawGradientLine(graphics, (int) (lumX * 255), (int) (lumXIntersection * 255), x, xIntersection, y, y);
+                    if (closestTri.getR() != null && closestTri.getG() != null && closestTri.getB() != null) {
+                        graphics.setColor(new Color(closestTri.getR(), closestTri.getG(), closestTri.getB()));
+                        graphics.drawLine(x, y, xIntersection, y);
+                    } else {
+                        drawGradientLine(graphics, (int) (lumX * 255), (int) (lumXIntersection * 255), x, xIntersection, y, y);
+                    }
                 }
                 x = xIntersection;
 
@@ -478,6 +482,7 @@ public class Display extends Canvas implements Runnable {
                     rayFromVecToLightSource = Vec3D.normalise(rayFromVecToLightSource);
                     double dotProduct = Vec3D.dotProduct(normal, rayFromVecToLightSource);
                     if (dotProduct > 0.0) {
+                        transformedTriangle.setLuminance(dotProduct);
                         vecsLum[i] = dotProduct;
                     }
                 }
