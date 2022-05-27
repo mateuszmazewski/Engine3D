@@ -379,7 +379,9 @@ public class Display extends Canvas implements Runnable {
         }
         // TODO: sometimes the loop does not quit by break
 
-        if (vecs[1].getX() > vecs[2].getX()) {
+        double line01XForGivenY = Util.scaleToRange(vecs[0].getY(), vecs[1].getY(), y, vecs[0].getX(), vecs[1].getX());
+        double line02XForGivenY = Util.scaleToRange(vecs[0].getY(), vecs[2].getY(), y, vecs[0].getX(), vecs[2].getX());
+        if (line01XForGivenY > line02XForGivenY) {
             Vec3D temp = vecs[2];
             vecs[2] = vecs[1];
             vecs[1] = temp;
