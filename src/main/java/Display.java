@@ -277,14 +277,14 @@ public class Display extends Canvas implements Runnable {
             }
 
             // Sort active edges list by increasing order of x of the intersection point
-            activeEdges.sort(Comparator.comparingInt(Edge::getxIntersection));
+            activeEdges.sort(Comparator.comparingDouble(Edge::getxIntersection));
 
             // Start from the beginning of each scanline
             int x = 0;
             List<Triangle> activeTriangles = new ArrayList<>();
 
             for (Edge ae : activeEdges) {
-                int xIntersection = ae.getxIntersection();
+                double xIntersection = ae.getxIntersection();
 
                 Triangle closestTri = null;
                 if (activeTriangles.size() == 0) {
@@ -299,7 +299,7 @@ public class Display extends Canvas implements Runnable {
                     Triangle closestTriangle = activeTriangles.get(0);
                     double zClosest = Double.MAX_VALUE;
                     for (Triangle t : activeTriangles) {
-                        int xMid = (x + xIntersection) / 2;
+                        double xMid = (x + xIntersection) / 2;
 
                         // Calculate z for x = xMid
                         double x1 = t.getVecs()[0].getX();
@@ -330,7 +330,7 @@ public class Display extends Canvas implements Runnable {
 
                 if (closestTri == null) {
                     // Draw a section between intersection points
-                    graphics.drawLine(x, y, xIntersection, y);
+                    graphics.drawLine(x, y, (int) xIntersection, y);
                 } else {
                     Vec3D[] vecs = getVecsWithGouraudOrder(closestTri, y);
                     Vec3D a = uniqueVecs.get(vecs[0]);
@@ -339,22 +339,38 @@ public class Display extends Canvas implements Runnable {
 
                     //System.out.println(a.getLum() + " " + b.getLum() + " " + c.getLum() + "\n");
 
-                    double lumX = a.getLum() * (b.getY() - y) / (b.getY() - a.getY()) + b.getLum() * (y - a.getY()) / (b.getY() - a.getY()); // I_D
-                    double lumXIntersection;
+                    double xD = Util.scaleToRange(a.getY(), b.getY(), y, a.getX(), b.getX());
+                    double xF = Util.scaleToRange(a.getY(), c.getY(), y, a.getX(), c.getX());
+                    double lumD = a.getLum() * (b.getY() - y) / (b.getY() - a.getY()) + b.getLum() * (y - a.getY()) / (b.getY() - a.getY()); // I_D
+                    double lumF;
                     if (a.getY() != c.getY()) {
-                        lumXIntersection = a.getLum() * (c.getY() - y) / (c.getY() - a.getY()) + c.getLum() * (y - a.getY()) / (c.getY() - a.getY());
+                        lumF = a.getLum() * (c.getY() - y) / (c.getY() - a.getY()) + c.getLum() * (y - a.getY()) / (c.getY() - a.getY());
                     } else {
-                        lumXIntersection = a.getLum() * (c.getX() - xIntersection) / (c.getX() - a.getX()) + c.getLum() * (xIntersection - a.getX()) / (c.getX() - a.getX());
+                        lumF = a.getLum() * (c.getX() - xIntersection) / (c.getX() - a.getX()) + c.getLum() * (xIntersection - a.getX()) / (c.getX() - a.getX());
+                    }
+
+                    double lumX;
+                    if (x == (int) xD) {
+                        lumX = lumD;
+                    } else {
+                        lumX = lumD * ((xF - x) / (xF - xD)) + lumF * ((x - xD) / (xF - xD));
+                    }
+
+                    double lumXIntersection;
+                    if ((int) xIntersection == (int) xF) {
+                        lumXIntersection = lumF;
+                    } else {
+                        lumXIntersection = lumD * ((xF - xIntersection) / (xF - xD)) + lumF * ((xIntersection - xD) / (xF - xD));
                     }
 
                     if (closestTri.getR() != null && closestTri.getG() != null && closestTri.getB() != null) {
                         graphics.setColor(new Color(closestTri.getR(), closestTri.getG(), closestTri.getB()));
-                        graphics.drawLine(x, y, xIntersection, y);
+                        graphics.drawLine(x, y, (int) xIntersection, y);
                     } else {
-                        drawGradientLine(graphics, (int) (lumX * 255), (int) (lumXIntersection * 255), x, xIntersection, y, y);
+                        drawGradientLine(graphics, (int) (lumX * 255), (int) (lumXIntersection * 255), x, (int) xIntersection, y, y);
                     }
                 }
-                x = xIntersection;
+                x = (int) xIntersection;
 
                 // Update section info
                 if (!activeTriangles.contains(ae.getTriangle())) {
