@@ -2,7 +2,7 @@ public class Edge {
     Triangle triangle;
     Vec3D p1;
     Vec3D p2;
-    Integer xIntersection;
+    Double xIntersection;
 
     public Edge(Triangle triangle, Vec3D p1, Vec3D p2) {
         this.triangle = triangle;
@@ -10,7 +10,7 @@ public class Edge {
         this.p2 = p2;
     }
 
-    public Integer xIntersection(int y) {
+    public Double xIntersection(int y) {
         double minY = Math.min(p1.getY(), p2.getY());
         double maxY = Math.max(p1.getY(), p2.getY());
 
@@ -19,7 +19,7 @@ public class Edge {
             return null;
         }
 
-        return (int) Util.scaleToRange(p1.getY(), p2.getY(), y, p1.getX(), p2.getX());
+        return Util.scaleToRange(p1.getY(), p2.getY(), y, p1.getX(), p2.getX());
     }
 
     public Triangle getTriangle() {
@@ -46,11 +46,11 @@ public class Edge {
         this.p2 = p2;
     }
 
-    public Integer getxIntersection() {
+    public Double getxIntersection() {
         return xIntersection;
     }
 
-    public void setxIntersection(Integer xIntersection) {
+    public void setxIntersection(Double xIntersection) {
         this.xIntersection = xIntersection;
     }
 }
