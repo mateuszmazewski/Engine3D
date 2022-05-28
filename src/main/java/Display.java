@@ -410,6 +410,13 @@ public class Display extends Canvas implements Runnable {
     }
 
     private void drawGradientLine(Graphics2D g2d, int startLum, int endLum, int startX, int endX, int startY, int endY) {
+        if (startLum < 0 || startLum > 255) {
+            startLum = 0;
+        }
+        if (endLum < 0 || endLum > 255) {
+            endLum = 0;
+        }
+
         Color startColor = new Color(startLum, startLum, startLum);
         Color endColor = new Color(endLum, endLum, endLum);
 
