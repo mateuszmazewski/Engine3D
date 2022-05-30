@@ -500,7 +500,7 @@ public class Display extends Canvas implements Runnable {
                 }
 
                 // Illumination
-                Vec3D lightSourcePos = new Vec3D(0, 0, 0);
+                Vec3D lightSourcePos = new Vec3D(0, 3, 0);
                 //lightSourcePos = Vec3D.normalise(lightSourcePos);
 
                 Vec3D rayFromVecToLightSource;
